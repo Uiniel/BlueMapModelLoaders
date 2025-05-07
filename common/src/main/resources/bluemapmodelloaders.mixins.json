@@ -4,11 +4,15 @@
   "package": "me.owies.bluemapmodelloaders.mixin",
   "refmap": "${mod_id}.refmap.json",
   "compatibilityLevel": "JAVA_18",
-  "mixins": [],
-  "client": [
-    "MixinMinecraft"
+  "mixins": [
   ],
-  "server": [],
+  "client": [
+  ],
+  "server": [
+    "VariantMixin",
+    "ResourcePackMixin",
+    "ResourcePackAccessorMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }

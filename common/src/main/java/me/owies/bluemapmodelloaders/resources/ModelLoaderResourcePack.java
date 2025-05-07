@@ -1,0 +1,160 @@
+package me.owies.bluemapmodelloaders.resources;
+
+import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
+import de.bluecolored.bluemap.core.resources.pack.Pack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePackExtension;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.VariantSet;
+import me.owies.bluemapmodelloaders.mixin.ResourcePackAccessorMixin;
+import me.owies.bluemapmodelloaders.mixin.VariantMixin;
+import me.owies.bluemapmodelloaders.resources.objmodel.ObjMaterialLibrary;
+import me.owies.bluemapmodelloaders.resources.objmodel.ObjModel;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
+
+public class ModelLoaderResourcePack extends Pack implements ResourcePackExtension {
+    public static ResourcePack BLUEMAP_RESOURCE_PACK;
+
+    private final Map<ResourcePath<ExtendedModel>, ExtendedModel> models;
+    private final Map<ResourcePath<ObjModel>, ObjModel> objModels;
+    private final Map<ResourcePath<ObjMaterialLibrary>, ObjMaterialLibrary> objMaterialLibraries;
+
+    public ModelLoaderResourcePack() {
+        super(-1);
+        this.models = new HashMap<>();
+        this.objModels = new HashMap<>();
+        this.objMaterialLibraries = new HashMap<>();
+    }
+
+    @Override
+    public void loadResources(Path root) throws IOException {
+        try {
+            CompletableFuture.allOf(
+                    // load models (again, but this time with loader support)
+                    CompletableFuture.runAsync(() -> {
+                        list(root.resolve("assets"))
+                                .map(path -> path.resolve("models"))
+                                .flatMap(ResourcePack::list)
+                                .filter(path -> !path.getFileName().toString().equals("item"))
+                                .flatMap(ResourcePack::walk)
+                                .filter(path -> path.getFileName().toString().endsWith(".json"))
+                                .filter(Files::isRegularFile)
+                                .forEach(file -> loadResource(root, file, 1, 3, key -> {
+                                    try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                        return ResourcesGson.INSTANCE.fromJson(reader, ExtendedModel.class);
+                                    }
+                                }, models));
+                    }, BlueMap.THREAD_POOL),
+
+                    // load .obj models
+                    CompletableFuture.runAsync(() -> {
+                        list(root.resolve("assets"))
+                                .map(path -> path.resolve("models"))
+                                .flatMap(ResourcePack::list)
+                                .filter(path -> !path.getFileName().toString().equals("item"))
+                                .flatMap(ResourcePack::walk)
+                                .filter(path -> path.getFileName().toString().endsWith(".obj"))
+                                .filter(Files::isRegularFile)
+                                .forEach(file -> loadResource(root, file, 1, 2, false, key -> {
+                                    try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                        return ObjModel.fromReader(reader, file, 1, 2);
+                                    }
+                                }, objModels));
+                    }, BlueMap.THREAD_POOL),
+
+                    // load .mtl models
+                    CompletableFuture.runAsync(() -> {
+                        list(root.resolve("assets"))
+                                .map(path -> path.resolve("models"))
+                                .flatMap(ResourcePack::list)
+                                .filter(path -> !path.getFileName().toString().equals("item"))
+                                .flatMap(ResourcePack::walk)
+                                .filter(path -> path.getFileName().toString().endsWith(".mtl"))
+                                .filter(Files::isRegularFile)
+                                .forEach(file -> loadResource(root, file, 1, 3, false, key -> {
+                                    try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                        return ObjMaterialLibrary.fromReader(reader);
+                                    }
+                                }, objMaterialLibraries));
+                    }, BlueMap.THREAD_POOL)
+            ).join();
+        } catch (RuntimeException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof IOException) throw (IOException) cause;
+            if (cause != null) throw new IOException(cause);
+            throw new IOException(ex);
+        }
+    }
+
+    @Override
+    public void bake() throws IOException {
+        ((ResourcePackAccessorMixin) BLUEMAP_RESOURCE_PACK)
+                .getBlockStates()
+                .values()
+                .stream()
+                .flatMap(blockState -> {
+                    Stream<VariantSet> variants = Stream.empty();
+                    if (blockState.getVariants() != null) {
+                        variants = Arrays.stream(blockState.getVariants().getVariants());
+                    }
+                    Stream<VariantSet> multipart = Stream.empty();
+                    if (blockState.getMultipart() != null) {
+                        multipart = Arrays.stream(blockState.getMultipart().getParts());
+                    }
+                    return Stream.concat(variants, multipart);
+                })
+                .flatMap(v -> Arrays.stream(v.getVariants()))
+                .forEach(variant -> {
+                    LoaderType loader = models.get(variant.getModel()).loader;
+                    if (loader != null) {
+                        ((VariantMixin) variant).setRenderer(loader.getRenderer());
+                    }
+                });
+    }
+
+    protected <T> void loadResource(Path root, Path file, int namespacePos, int valuePos,
+                                    boolean removeEnding, Loader<T> loader, Map<? super ResourcePath<T>, T> resultMap) {
+        if (removeEnding) {
+            loadResource(root, file, namespacePos, valuePos, loader, resultMap);
+        } else {
+            try {
+                String ending = "";
+                String filename = file.getFileName().toString();
+                int dotIndex = filename.lastIndexOf('.');
+                if (dotIndex != -1) ending = filename.substring(dotIndex);
+                ResourcePath<T> resourcePath = new ResourcePath<>(root.relativize(file), namespacePos, valuePos);
+                resourcePath = new ResourcePath<>(resourcePath.getFormatted() + ending);
+
+                if (resultMap.containsKey(resourcePath)) return; // don't load already present resources
+
+                T resource = loader.load(resourcePath);
+                if (resource == null) return; // don't load missing resources
+
+                resourcePath.setResource(resource);
+                resultMap.put(resourcePath, resource);
+            } catch (Exception ex) {
+                Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
+            }
+        }
+    }
+
+    @Override
+    public void loadResources(Iterable<Path> roots) throws IOException, InterruptedException {
+        throw new UnsupportedOperationException();
+    }
+
+    public ExtendedModel getExtendedModel(ResourcePath<ExtendedModel> extendedModelResourcePath) {
+        return models.get(extendedModelResourcePath);
+    }
+}
