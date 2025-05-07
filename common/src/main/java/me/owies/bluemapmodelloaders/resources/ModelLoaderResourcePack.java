@@ -8,6 +8,8 @@ import de.bluecolored.bluemap.core.resources.pack.Pack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePackExtension;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.VariantSet;
+import lombok.Getter;
+import me.owies.bluemapmodelloaders.Constants;
 import me.owies.bluemapmodelloaders.mixin.ResourcePackAccessorMixin;
 import me.owies.bluemapmodelloaders.mixin.VariantMixin;
 import me.owies.bluemapmodelloaders.resources.objmodel.ObjMaterialLibrary;
@@ -25,16 +27,17 @@ import java.util.stream.Stream;
 
 public class ModelLoaderResourcePack extends Pack implements ResourcePackExtension {
     public static ResourcePack BLUEMAP_RESOURCE_PACK;
+    public static ModelLoaderResourcePack INSTANCE;
 
-    private final Map<ResourcePath<ExtendedModel>, ExtendedModel> models;
-    private final Map<ResourcePath<ObjModel>, ObjModel> objModels;
-    private final Map<ResourcePath<ObjMaterialLibrary>, ObjMaterialLibrary> objMaterialLibraries;
+    @Getter private final Map<ResourcePath<ExtendedModel>, ExtendedModel> models;
+    @Getter private final Map<ResourcePath<ObjModel>, ObjModel> objModels;
+    @Getter private final Map<ResourcePath<ObjMaterialLibrary>, ObjMaterialLibrary> mtlLibraries;
 
     public ModelLoaderResourcePack() {
         super(-1);
         this.models = new HashMap<>();
         this.objModels = new HashMap<>();
-        this.objMaterialLibraries = new HashMap<>();
+        this.mtlLibraries = new HashMap<>();
     }
 
     @Override
@@ -82,11 +85,11 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
                                 .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".mtl"))
                                 .filter(Files::isRegularFile)
-                                .forEach(file -> loadResource(root, file, 1, 3, false, key -> {
+                                .forEach(file -> loadResource(root, file, 1, 2, false, key -> {
                                     try (BufferedReader reader = Files.newBufferedReader(file)) {
                                         return ObjMaterialLibrary.fromReader(reader);
                                     }
-                                }, objMaterialLibraries));
+                                }, mtlLibraries));
                     }, BlueMap.THREAD_POOL)
             ).join();
         } catch (RuntimeException ex) {
@@ -152,9 +155,5 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
     @Override
     public void loadResources(Iterable<Path> roots) throws IOException, InterruptedException {
         throw new UnsupportedOperationException();
-    }
-
-    public ExtendedModel getExtendedModel(ResourcePath<ExtendedModel> extendedModelResourcePath) {
-        return models.get(extendedModelResourcePath);
     }
 }

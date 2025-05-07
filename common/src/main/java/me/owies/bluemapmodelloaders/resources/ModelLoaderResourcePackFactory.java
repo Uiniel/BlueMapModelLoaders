@@ -8,7 +8,8 @@ public class ModelLoaderResourcePackFactory implements ResourcePackExtensionType
 
     @Override
     public ModelLoaderResourcePack create() {
-        return new ModelLoaderResourcePack();
+        ModelLoaderResourcePack.INSTANCE = new ModelLoaderResourcePack();
+        return ModelLoaderResourcePack.INSTANCE;
     }
 
     @Override

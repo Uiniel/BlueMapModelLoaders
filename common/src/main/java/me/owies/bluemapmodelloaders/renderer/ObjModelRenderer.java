@@ -1,25 +1,268 @@
 package me.owies.bluemapmodelloaders.renderer;
 
+import com.flowpowered.math.vector.Vector2f;
+import com.flowpowered.math.vector.Vector3f;
+import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
+import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRenderer;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
+import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
+import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
+import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.util.math.VectorM2f;
+import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 import me.owies.bluemapmodelloaders.Constants;
+import me.owies.bluemapmodelloaders.resources.ExtendedModel;
+import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePack;
+import me.owies.bluemapmodelloaders.resources.objmodel.*;
 
+// Code copied and modified from de.bluecolored.bluemap.core.map.hires.block.ResourceModelRenderer
+// Copyright (c) Blue <https://www.bluecolored.de>
 public class ObjModelRenderer implements BlockRenderer {
     public static final BlockRendererType OBJ = new BlockRendererType.Impl(new Key("bluemapmodelloaders",  "obj"), ObjModelRenderer::new);
 
+    private final ResourcePack resourcePack;
+    private final ModelLoaderResourcePack modelLoaderResourcePack;
+    private final TextureGallery textureGallery;
+    private final RenderSettings renderSettings;
+    private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
+
+    private final VectorM3f[] corners = new VectorM3f[8];
+    private final VectorM2f[] rawUvs = new VectorM2f[4];
+    private final VectorM2f[] uvs = new VectorM2f[4];
+    private final Color tintColor = new Color();
+    private final Color mapColor = new Color();
+
+    private BlockNeighborhood block;
+    private Variant variant;
+    private Model modelResource;
+    private ExtendedModel modelLoaderResource;
+    private TileModelView blockModel;
+    private Color blockColor;
+    private float blockColorOpacity;
+
     public ObjModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
+        this.resourcePack = resourcePack;
+        this.textureGallery = textureGallery;
+        this.renderSettings = renderSettings;
+        this.blockColorCalculator = resourcePack.getColorCalculatorFactory().createCalculator();
+        modelLoaderResourcePack = ModelLoaderResourcePack.INSTANCE;
+
+        for (int i = 0; i < corners.length; i++) corners[i] = new VectorM3f(0, 0, 0);
+        for (int i = 0; i < rawUvs.length; i++) rawUvs[i] = new VectorM2f(0, 0);
     }
 
-    @Override
-    public void render(BlockNeighborhood block, Variant variant, TileModelView tileModel, Color blockColor) {
-        Constants.LOG.warn("ObjModelRenderer rendering not implemented yet");
+    public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color color) {
+        this.block = block;
+        this.blockModel = blockModel;
+        this.blockColor = color;
+        this.blockColorOpacity = 0f;
+        this.variant = variant;
+        this.modelResource = variant.getModel().getResource(resourcePack::getModel);
+        this.modelLoaderResource = modelLoaderResourcePack.getModels().get(variant.getModel());
+
+        if (this.modelLoaderResource == null) return;
+
+        this.tintColor.set(0, 0, 0, -1, true);
+
+        // render model
+        int modelStart = blockModel.getStart();
+
+        ResourcePath<ObjModel> objPath = modelLoaderResource.getModel();
+        if (objPath == null) {
+            Constants.LOG.warn("No obj model specified: " + variant.getModel());
+            return;
+        }
+        ObjModel objModel = objPath.getResource(modelLoaderResourcePack.getObjModels()::get);
+        if (objModel == null) {
+            Constants.LOG.warn("Missing obj model: " + variant.getModel());
+            return;
+        }
+
+        buildModelObjResource(objModel, blockModel);
+
+        if (color.a > 0) {
+            color.flatten().straight();
+            color.a = blockColorOpacity;
+        }
+
+        blockModel.initialize(modelStart);
+
+        // apply model-transform
+        if (variant.isTransformed())
+            blockModel.transform(variant.getTransformMatrix());
+
+        //random offset
+        if (block.getProperties().isRandomOffset()){
+            float dx = (hashToFloat(block.getX(), block.getZ(), 123984) - 0.5f) * 0.75f;
+            float dz = (hashToFloat(block.getX(), block.getZ(), 345542) - 0.5f) * 0.75f;
+            blockModel.translate(dx, 0, dz);
+        }
+
     }
+
+    private void buildModelObjResource(ObjModel model, TileModelView blockModel) {
+        Logger.global.logDebug("Building model obj resource, for model " + modelLoaderResource.getModel());
+        for (ObjFace face : model.getFaces()) {
+            if (face.getVertices().length == 4) {
+                createObjQuad(face, model, blockModel);
+            } else if (face.getVertices().length == 3) {
+                createObjTri(face, model,  blockModel, face.getVertices()[0], face.getVertices()[1], face.getVertices()[2]);
+            } else {
+                Logger.global.logWarning("Polygons with more than 4 vertices not supported");
+            }
+        }
+    }
+
+    private void createObjQuad(ObjFace face, ObjModel model, TileModelView blockModel) {
+        createObjTri(face, model, blockModel, face.getVertices()[0], face.getVertices()[1], face.getVertices()[2]);
+        createObjTri(face, model, blockModel, face.getVertices()[2], face.getVertices()[3], face.getVertices()[0]);
+    }
+
+    private void createObjTri(ObjFace face, ObjModel model, TileModelView blockModel, ObjVertexData p0Data, ObjVertexData p1Data, ObjVertexData p2Data) {
+        TileModel tileModel = blockModel.getTileModel();
+
+        blockModel.initialize();
+        blockModel.add(1);
+
+        int start = blockModel.getStart();
+
+        Vector3f p0 = model.getVertices()[p0Data.getVertexIndex()];
+        Vector3f p1 = model.getVertices()[p1Data.getVertexIndex()];
+        Vector3f p2 = model.getVertices()[p2Data.getVertexIndex()];
+
+        tileModel.setPositions(start,
+                p0.getX(), p0.getY(), p0.getZ(),
+                p1.getX(), p1.getY(), p1.getZ(),
+                p2.getX(), p2.getY(), p2.getZ());
+
+        ObjMaterial material = ObjModel.MISSING_MATERIAL;
+        for (ResourcePath<ObjMaterialLibrary> mtlPath: model.getMaterialLibraries()) {
+            ObjMaterialLibrary mtl = mtlPath.getResource(modelLoaderResourcePack.getMtlLibraries()::get);
+            if (mtl == null) {
+                Constants.LOG.warn("Missing mtl library: " + mtlPath);
+                continue;
+            }
+            if (mtl.getMaterials().containsKey(face.getMaterial())) {
+                material = mtl.getMaterials().get(face.getMaterial());
+            }
+        }
+
+        ResourcePath<Texture> texturePath = material.getTexture().getTexturePath(modelResource.getTextures()::get);
+        int textureId = textureGallery.get(texturePath);
+        tileModel.setMaterialIndex(start, textureId);
+
+        Vector2f uv0 = model.getTextureCoords()[p0Data.getUvIndex()];
+        Vector2f uv1 = model.getTextureCoords()[p1Data.getUvIndex()];
+        Vector2f uv2 = model.getTextureCoords()[p2Data.getUvIndex()];
+
+        if (modelLoaderResource.isFlip_v()) {
+            uv0 = uv0.mul(1, -1).add(0, 1);
+            uv1 = uv1.mul(1, -1).add(0, 1);
+            uv2 = uv2.mul(1, -1).add(0, 1);
+        }
+
+        tileModel.setUvs(start,
+                uv0.getX(), uv0.getY(),
+                uv1.getX(), uv1.getY(),
+                uv2.getX(), uv2.getY());
+
+        Color color = material.getColor();
+        tileModel.setColor(start, color.r, color.g, color.b);
+
+        tileModel.setAOs(start, 1.0f, 1.0f, 1.0f);
+    }
+
+    private ExtendedBlock getRotationRelativeBlock(Direction direction){
+        return getRotationRelativeBlock(direction.toVector());
+    }
+
+    private ExtendedBlock getRotationRelativeBlock(Vector3i direction){
+        return getRotationRelativeBlock(
+                direction.getX(),
+                direction.getY(),
+                direction.getZ()
+        );
+    }
+
+    private final VectorM3f rotationRelativeBlockDirection = new VectorM3f(0, 0, 0);
+    private ExtendedBlock getRotationRelativeBlock(int dx, int dy, int dz){
+        rotationRelativeBlockDirection.set(dx, dy, dz);
+        makeRotationRelative(rotationRelativeBlockDirection);
+
+        return block.getNeighborBlock(
+                Math.round(rotationRelativeBlockDirection.x),
+                Math.round(rotationRelativeBlockDirection.y),
+                Math.round(rotationRelativeBlockDirection.z)
+        );
+    }
+
+    private void makeRotationRelative(VectorM3f direction){
+        if (variant.isTransformed())
+            direction.rotateAndScale(variant.getTransformMatrix());
+    }
+
+    private float testAo(VectorM3f vertex, Direction dir){
+        Vector3i dirVec = dir.toVector();
+        int occluding = 0;
+
+        int x = 0;
+        if (vertex.x == 16){
+            x = 1;
+        } else if (vertex.x == 0){
+            x = -1;
+        }
+
+        int y = 0;
+        if (vertex.y == 16){
+            y = 1;
+        } else if (vertex.y == 0){
+            y = -1;
+        }
+
+        int z = 0;
+        if (vertex.z == 16){
+            z = 1;
+        } else if (vertex.z == 0){
+            z = -1;
+        }
+
+
+        if (x * dirVec.getX() + y * dirVec.getY() > 0){
+            if (getRotationRelativeBlock(x, y, 0).getProperties().isOccluding()) occluding++;
+        }
+
+        if (x * dirVec.getX() + z * dirVec.getZ() > 0){
+            if (getRotationRelativeBlock(x, 0, z).getProperties().isOccluding()) occluding++;
+        }
+
+        if (y * dirVec.getY() + z * dirVec.getZ() > 0){
+            if (getRotationRelativeBlock(0, y, z).getProperties().isOccluding()) occluding++;
+        }
+
+        if (x * dirVec.getX() + y * dirVec.getY() + z * dirVec.getZ() > 0){
+            if (getRotationRelativeBlock(x, y, z).getProperties().isOccluding()) occluding++;
+        }
+
+        if (occluding > 3) occluding = 3;
+        return  Math.max(0f, Math.min(1f - occluding * 0.25f, 1f));
+    }
+
+    private static float hashToFloat(int x, int z, long seed) {
+        final long hash = x * 73428767L ^ z * 4382893L ^ seed * 457;
+        return (hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000;
+    }
+
 }

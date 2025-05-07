@@ -41,7 +41,7 @@ public class ExtendedModel {
         ResourcePath<ExtendedModel> parentPath = this.parent;
         this.parent = null;
 
-        ExtendedModel parent = parentPath.getResource(resourcePack::getExtendedModel);
+        ExtendedModel parent = parentPath.getResource(resourcePack.getModels()::get);
         if (parent != null) {
             parent.applyParent(resourcePack);
 
