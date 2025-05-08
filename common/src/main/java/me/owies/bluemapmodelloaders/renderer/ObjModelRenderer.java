@@ -133,9 +133,9 @@ public class ObjModelRenderer implements BlockRenderer {
     }
 
     private void createObjTri(ObjFace face, ObjModel model, TileModelView blockModel, ObjVertexData p0Data, ObjVertexData p1Data, ObjVertexData p2Data) {
-        Vector3f p0 = model.getVertices()[p0Data.getVertexIndex()];
-        Vector3f p1 = model.getVertices()[p1Data.getVertexIndex()];
-        Vector3f p2 = model.getVertices()[p2Data.getVertexIndex()];
+        Vector3f p0 = model.getVertex(p0Data.getVertexIndex());
+        Vector3f p1 = model.getVertex(p1Data.getVertexIndex());
+        Vector3f p2 = model.getVertex(p2Data.getVertexIndex());
 
         // light calculation
         Vector3f normal = p1.sub(p0).cross(p2.sub(p0)).normalize();
@@ -183,10 +183,10 @@ public class ObjModelRenderer implements BlockRenderer {
         Vector2f uv0 = new Vector2f(1, 0);
         Vector2f uv1 = new Vector2f(0, 0);
         Vector2f uv2 = new Vector2f(0, 1);
-        if (p0Data.getUvIndex() != -1 && p1Data.getUvIndex() != -1 && p2Data.getUvIndex() != -1) {
-            uv0 = model.getTextureCoords()[p0Data.getUvIndex()];
-            uv1 = model.getTextureCoords()[p1Data.getUvIndex()];
-            uv2 = model.getTextureCoords()[p2Data.getUvIndex()];
+        if (p0Data.getUvIndex() != 0 && p1Data.getUvIndex() != 0 && p2Data.getUvIndex() != 0) {
+            uv0 = model.getTextureCoord(p0Data.getUvIndex());
+            uv1 = model.getTextureCoord(p1Data.getUvIndex());
+            uv2 = model.getTextureCoord(p2Data.getUvIndex());
         }
 
         if (modelLoaderResource.isFlip_v()) {

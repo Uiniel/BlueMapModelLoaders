@@ -56,10 +56,10 @@ public class ObjModel {
                     ObjVertexData[] faceVertices = new ObjVertexData[args.length - 1];
                     for (int i = 0; i < faceVertices.length; i++) {
                         String[] vertex = args[i + 1].split("/");
-                        int vertexIndex = Integer.parseInt(vertex[0]) - 1;
-                        int uvIndex = -1;
+                        int vertexIndex = Integer.parseInt(vertex[0]);
+                        int uvIndex = 0;
                         if (vertex.length >= 2 && !vertex[1].isEmpty()) {
-                            uvIndex = Integer.parseInt(vertex[1]) - 1;
+                            uvIndex = Integer.parseInt(vertex[1]);
                         }
                         faceVertices[i] = new ObjVertexData(vertexIndex, uvIndex);
                     }
@@ -91,5 +91,19 @@ public class ObjModel {
         obj.materialLibraries = materialLibraries.toArray(new ResourcePath[0]);
 
         return obj;
+    }
+
+    public Vector3f getVertex(int index) {
+        if (index < 0) {
+            return vertices[vertices.length + index];
+        }
+        return vertices[index - 1];
+    }
+
+    public Vector2f getTextureCoord(int index) {
+        if (index < 0) {
+            return textureCoords[vertices.length + index];
+        }
+        return textureCoords[index - 1];
     }
 }
