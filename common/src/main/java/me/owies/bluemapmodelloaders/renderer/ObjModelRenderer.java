@@ -180,10 +180,14 @@ public class ObjModelRenderer implements BlockRenderer {
         int textureId = textureGallery.get(texturePath);
         tileModel.setMaterialIndex(start, textureId);
 
-        // TODO: use default uvs if uvs don't exist
-        Vector2f uv0 = model.getTextureCoords()[p0Data.getUvIndex()];
-        Vector2f uv1 = model.getTextureCoords()[p1Data.getUvIndex()];
-        Vector2f uv2 = model.getTextureCoords()[p2Data.getUvIndex()];
+        Vector2f uv0 = new Vector2f(1, 0);
+        Vector2f uv1 = new Vector2f(0, 0);
+        Vector2f uv2 = new Vector2f(0, 1);
+        if (p0Data.getUvIndex() != -1 && p1Data.getUvIndex() != -1 && p2Data.getUvIndex() != -1) {
+            uv0 = model.getTextureCoords()[p0Data.getUvIndex()];
+            uv1 = model.getTextureCoords()[p1Data.getUvIndex()];
+            uv2 = model.getTextureCoords()[p2Data.getUvIndex()];
+        }
 
         if (modelLoaderResource.isFlip_v()) {
             uv0 = uv0.mul(1, -1).add(0, 1);
