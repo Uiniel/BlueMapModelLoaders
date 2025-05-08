@@ -72,7 +72,7 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
                                 .filter(Files::isRegularFile)
                                 .forEach(file -> loadResource(root, file, 1, 2, false, key -> {
                                     try (BufferedReader reader = Files.newBufferedReader(file)) {
-                                        return ObjModel.fromReader(reader, file, 1, 2);
+                                        return ObjModel.fromReader(reader, root.relativize(file), 1, 2);
                                     }
                                 }, objModels));
                     }, BlueMap.THREAD_POOL),
