@@ -11,7 +11,7 @@ import lombok.Setter;
 @Getter
 public class ObjMaterial {
     public static final TextureVariable MISSING_TEXTURE = new TextureVariable(ResourcePack.MISSING_TEXTURE);
-    public static final TextureVariable WHITE_TEXTURE = new TextureVariable(new ResourcePath<>("bluemap", "block/white"));
+    public static final TextureVariable WHITE_TEXTURE = new TextureVariable(new ResourcePath<>("bluemapmodelloaders", "block/white"));
 
     private TextureVariable texture = MISSING_TEXTURE;
     private Color color = new Color().set(1.0f, 1.0f, 1.0f, 1.0f, false);

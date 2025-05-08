@@ -8,20 +8,21 @@ import de.bluecolored.bluemap.core.resources.pack.Pack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePackExtension;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.VariantSet;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
-import me.owies.bluemapmodelloaders.Constants;
 import me.owies.bluemapmodelloaders.mixin.ResourcePackAccessorMixin;
 import me.owies.bluemapmodelloaders.mixin.VariantMixin;
 import me.owies.bluemapmodelloaders.resources.objmodel.ObjMaterialLibrary;
 import me.owies.bluemapmodelloaders.resources.objmodel.ObjModel;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -98,6 +99,21 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
             if (cause != null) throw new IOException(cause);
             throw new IOException(ex);
         }
+    }
+
+    @Override
+    public Iterable<Texture> loadTextures(Path root) throws IOException {
+        List<Texture> textures = new ArrayList<>();
+
+        Path white_texture_path = root.resolve("assets/bluemapmodelloaders/textures/block/white.png");
+        BufferedImage image;
+        try (InputStream in = Files.newInputStream(white_texture_path)) {
+            image = ImageIO.read(in);
+        }
+
+        textures.add(Texture.from(new ResourcePath<>("bluemapmodelloaders:block/white"), image, null));
+
+        return textures;
     }
 
     @Override
