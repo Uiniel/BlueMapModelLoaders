@@ -21,6 +21,7 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
+import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 import me.owies.bluemapmodelloaders.Constants;
@@ -132,16 +133,31 @@ public class ObjModelRenderer implements BlockRenderer {
     }
 
     private void createObjTri(ObjFace face, ObjModel model, TileModelView blockModel, ObjVertexData p0Data, ObjVertexData p1Data, ObjVertexData p2Data) {
+        Vector3f p0 = model.getVertices()[p0Data.getVertexIndex()];
+        Vector3f p1 = model.getVertices()[p1Data.getVertexIndex()];
+        Vector3f p2 = model.getVertices()[p2Data.getVertexIndex()];
+
+        // light calculation
+        Vector3f normal = p1.sub(p0).cross(p2.sub(p0)).normalize();
+        ExtendedBlock facedBlockNeighbor = getRotationRelativeBlock(normal);
+        LightData blockLightData = block.getLightData();
+        LightData facedLightData = facedBlockNeighbor.getLightData();
+
+        int sunLight = Math.max(blockLightData.getSkyLight(), facedLightData.getSkyLight());
+        int blockLight = Math.max(blockLightData.getBlockLight(), facedLightData.getBlockLight());
+
+        // filter out faces that are in a "cave" that should not be rendered
+        if (
+                block.isRemoveIfCave() &&
+                        (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0
+        ) return;
+
         TileModel tileModel = blockModel.getTileModel();
 
         blockModel.initialize();
         blockModel.add(1);
 
         int start = blockModel.getStart();
-
-        Vector3f p0 = model.getVertices()[p0Data.getVertexIndex()];
-        Vector3f p1 = model.getVertices()[p1Data.getVertexIndex()];
-        Vector3f p2 = model.getVertices()[p2Data.getVertexIndex()];
 
         tileModel.setPositions(start,
                 p0.getX(), p0.getY(), p0.getZ(),
@@ -164,6 +180,7 @@ public class ObjModelRenderer implements BlockRenderer {
         int textureId = textureGallery.get(texturePath);
         tileModel.setMaterialIndex(start, textureId);
 
+        // TODO: use default uvs if uvs don't exist
         Vector2f uv0 = model.getTextureCoords()[p0Data.getUvIndex()];
         Vector2f uv1 = model.getTextureCoords()[p1Data.getUvIndex()];
         Vector2f uv2 = model.getTextureCoords()[p2Data.getUvIndex()];
@@ -183,13 +200,12 @@ public class ObjModelRenderer implements BlockRenderer {
         tileModel.setColor(start, color.r, color.g, color.b);
 
         tileModel.setAOs(start, 1.0f, 1.0f, 1.0f);
+
+        tileModel.setBlocklight(start, blockLight);
+        tileModel.setSunlight(start, sunLight);
     }
 
-    private ExtendedBlock getRotationRelativeBlock(Direction direction){
-        return getRotationRelativeBlock(direction.toVector());
-    }
-
-    private ExtendedBlock getRotationRelativeBlock(Vector3i direction){
+    private ExtendedBlock getRotationRelativeBlock(Vector3f direction){
         return getRotationRelativeBlock(
                 direction.getX(),
                 direction.getY(),
@@ -198,7 +214,7 @@ public class ObjModelRenderer implements BlockRenderer {
     }
 
     private final VectorM3f rotationRelativeBlockDirection = new VectorM3f(0, 0, 0);
-    private ExtendedBlock getRotationRelativeBlock(int dx, int dy, int dz){
+    private ExtendedBlock getRotationRelativeBlock(float dx, float dy, float dz){
         rotationRelativeBlockDirection.set(dx, dy, dz);
         makeRotationRelative(rotationRelativeBlockDirection);
 
