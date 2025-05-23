@@ -137,8 +137,14 @@ public class ObjModelRenderer implements BlockRenderer {
         Vector3f p1 = model.getVertex(p1Data.getVertexIndex());
         Vector3f p2 = model.getVertex(p2Data.getVertexIndex());
 
+        Vector3f cross = p1.sub(p0).cross(p2.sub(p0));
+        if (cross.lengthSquared() == 0) {
+            Constants.LOG.warn(modelLoaderResource.getModel() + ": zero-area triangle ignored");
+            return;
+        }
+
         // light calculation
-        Vector3f normal = p1.sub(p0).cross(p2.sub(p0)).normalize();
+        Vector3f normal = cross.normalize();
         ExtendedBlock facedBlockNeighbor = getRotationRelativeBlock(normal);
         LightData blockLightData = block.getLightData();
         LightData facedLightData = facedBlockNeighbor.getLightData();
