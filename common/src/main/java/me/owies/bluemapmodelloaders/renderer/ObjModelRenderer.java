@@ -181,6 +181,9 @@ public class ObjModelRenderer implements BlockRenderer {
                 material = mtl.getMaterials().get(face.getMaterial());
             }
         }
+        if (material == ObjModel.MISSING_MATERIAL) {
+            Constants.LOG.warn(modelLoaderResource.getModel() + ": material not found (" + face.getMaterial() + ")");
+        }
 
         ResourcePath<Texture> texturePath = material.getTexture().getTexturePath(modelResource.getTextures()::get);
         int textureId = textureGallery.get(texturePath);
