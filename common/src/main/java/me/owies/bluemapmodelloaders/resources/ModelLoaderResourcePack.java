@@ -106,12 +106,14 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
         List<Texture> textures = new ArrayList<>();
 
         Path white_texture_path = root.resolve("assets/bluemapmodelloaders/textures/block/white.png");
-        BufferedImage image;
-        try (InputStream in = Files.newInputStream(white_texture_path)) {
-            image = ImageIO.read(in);
-        }
+        if (Files.exists(white_texture_path)) {
+            BufferedImage image;
+            try (InputStream in = Files.newInputStream(white_texture_path)) {
+                image = ImageIO.read(in);
+            }
 
-        textures.add(Texture.from(new ResourcePath<>("bluemapmodelloaders:block/white"), image, null));
+            textures.add(Texture.from(new ResourcePath<>("bluemapmodelloaders:block/white"), image, null));
+        }
 
         return textures;
     }
