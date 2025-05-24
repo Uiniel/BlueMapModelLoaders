@@ -143,16 +143,20 @@ public class ObjModelRenderer implements BlockRenderer {
             return;
         }
 
-        // light calculation
-        Vector3f normal = cross.normalize();
-        Vector3f face_pos = p0.add(p1).add(p2).mul(1/3f).add(new Vector3f(-0.5, -0.5, -0.5)).round(); // in case of models bigger than one block
-        ExtendedBlock faceBlockLocation = getRotationRelativeBlock(face_pos);
-        ExtendedBlock facedBlockNeighbor = getRotationRelativeBlock(face_pos.add(normal));
-        LightData blockLightData = faceBlockLocation.getLightData();
-        LightData facedLightData = facedBlockNeighbor.getLightData();
+        int sunLight = 15;
+        int blockLight = 15;
+        if (modelLoaderResource.isShade_quads()) {
+            // light calculation
+            Vector3f normal = cross.normalize();
+            Vector3f face_pos = p0.add(p1).add(p2).mul(1 / 3f).add(new Vector3f(-0.5, -0.5, -0.5)).round(); // in case of models bigger than one block
+            ExtendedBlock faceBlockLocation = getRotationRelativeBlock(face_pos);
+            ExtendedBlock facedBlockNeighbor = getRotationRelativeBlock(face_pos.add(normal));
+            LightData blockLightData = faceBlockLocation.getLightData();
+            LightData facedLightData = facedBlockNeighbor.getLightData();
 
-        int sunLight = Math.max(blockLightData.getSkyLight(), facedLightData.getSkyLight());
-        int blockLight = Math.max(blockLightData.getBlockLight(), facedLightData.getBlockLight());
+            sunLight = Math.max(blockLightData.getSkyLight(), facedLightData.getSkyLight());
+            blockLight = Math.max(blockLightData.getBlockLight(), facedLightData.getBlockLight());
+        }
 
         // filter out faces that are in a "cave" that should not be rendered
         if (
