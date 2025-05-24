@@ -145,8 +145,10 @@ public class ObjModelRenderer implements BlockRenderer {
 
         // light calculation
         Vector3f normal = cross.normalize();
-        ExtendedBlock facedBlockNeighbor = getRotationRelativeBlock(normal);
-        LightData blockLightData = block.getLightData();
+        Vector3f face_pos = p0.add(p1).add(p2).mul(1/3f).add(new Vector3f(-0.5, -0.5, -0.5)).round(); // in case of models bigger than one block
+        ExtendedBlock faceBlockLocation = getRotationRelativeBlock(face_pos);
+        ExtendedBlock facedBlockNeighbor = getRotationRelativeBlock(face_pos.add(normal));
+        LightData blockLightData = faceBlockLocation.getLightData();
         LightData facedLightData = facedBlockNeighbor.getLightData();
 
         int sunLight = Math.max(blockLightData.getSkyLight(), facedLightData.getSkyLight());
