@@ -117,40 +117,26 @@ public class ObjModelRenderer implements BlockRenderer {
     private void buildModelObjResource(ObjModel model, TileModelView blockModel) {
         Logger.global.logDebug("Building model obj resource, for model " + modelLoaderResource.getModel());
         for (ObjFace face : model.getFaces()) {
-            if (face.getVertices().length == 4) {
-                createObjQuad(face, model, blockModel);
-            } else if (face.getVertices().length == 3) {
-                createObjTri(face, model,  blockModel, face.getVertices()[0], face.getVertices()[1], face.getVertices()[2]);
-            } else {
-                Logger.global.logWarning("Polygons with more than 4 vertices not supported");
-            }
+            createObjTri(face, model,  blockModel);
         }
     }
 
-    private void createObjQuad(ObjFace face, ObjModel model, TileModelView blockModel) {
-        createObjTri(face, model, blockModel, face.getVertices()[0], face.getVertices()[1], face.getVertices()[2]);
-        createObjTri(face, model, blockModel, face.getVertices()[2], face.getVertices()[3], face.getVertices()[0]);
-    }
+    private void createObjTri(ObjFace face, ObjModel model, TileModelView blockModel) {
+        ObjVertexData p0Data = face.getVertices()[0];
+        ObjVertexData p1Data = face.getVertices()[1];
+        ObjVertexData p2Data = face.getVertices()[2];
 
-    private void createObjTri(ObjFace face, ObjModel model, TileModelView blockModel, ObjVertexData p0Data, ObjVertexData p1Data, ObjVertexData p2Data) {
         Vector3f p0 = model.getVertex(p0Data.getVertexIndex());
         Vector3f p1 = model.getVertex(p1Data.getVertexIndex());
         Vector3f p2 = model.getVertex(p2Data.getVertexIndex());
-
-        Vector3f cross = p1.sub(p0).cross(p2.sub(p0));
-        if (cross.lengthSquared() == 0) {
-            Constants.LOG.warn(modelLoaderResource.getModel() + ": zero-area triangle ignored");
-            return;
-        }
 
         int sunLight = 15;
         int blockLight = 15;
         if (modelLoaderResource.isShade_quads()) {
             // light calculation
-            Vector3f normal = cross.normalize();
             Vector3f face_pos = p0.add(p1).add(p2).mul(1 / 3f).add(new Vector3f(-0.5, -0.5, -0.5)).round(); // in case of models bigger than one block
             ExtendedBlock faceBlockLocation = getRotationRelativeBlock(face_pos);
-            ExtendedBlock facedBlockNeighbor = getRotationRelativeBlock(face_pos.add(normal));
+            ExtendedBlock facedBlockNeighbor = getRotationRelativeBlock(face_pos.add(face.getNormal()));
             LightData blockLightData = faceBlockLocation.getLightData();
             LightData facedLightData = facedBlockNeighbor.getLightData();
 

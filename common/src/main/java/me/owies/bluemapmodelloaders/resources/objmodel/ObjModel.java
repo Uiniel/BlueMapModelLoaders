@@ -11,6 +11,7 @@ import java.io.Reader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Getter
 public class ObjModel {
@@ -77,20 +78,58 @@ public class ObjModel {
                         continue; // missing material library
                     }
 
-                    materialLibraries.add(new ResourcePath<>(path.resolveSibling(args[1]+".mtl"), namespacePos, valuePos));
+                    materialLibraries.add(new ResourcePath<>(path.resolveSibling(args[1] + ".mtl"), namespacePos, valuePos));
                 }
             }
         }
 
         br.close();
 
+
+        return createModel(vertices, textureCoords, faces, materialLibraries);
+    }
+
+    private static ObjModel createModel(List<Vector3f> vertices, List<Vector2f> textureCoords, List<ObjFace> faces, List<ResourcePath<ObjMaterialLibrary>> materialLibraries) {
         ObjModel obj = new ObjModel();
-        obj.vertices = vertices.toArray(new Vector3f[0]);
-        obj.textureCoords = textureCoords.toArray(new Vector2f[0]);
-        obj.faces = faces.toArray(new ObjFace[0]);
-        obj.materialLibraries = materialLibraries.toArray(new ResourcePath[0]);
+        obj.vertices = vertices.toArray(Vector3f[]::new);
+        obj.textureCoords = textureCoords.toArray(Vector2f[]::new);
+        obj.faces = faces
+                .stream()
+                .flatMap(ObjModel::triangulateFace)
+                .peek(face -> {
+                    Vector3f normal = calculateNormal(
+                            obj.getVertex(face.getVertices()[0].getVertexIndex()),
+                            obj.getVertex(face.getVertices()[1].getVertexIndex()),
+                            obj.getVertex(face.getVertices()[2].getVertexIndex())
+                    );
+                    face.setNormal(normal);
+                })
+                .filter(face -> face.getNormal() != null) // Filter out zero-area faces
+                .toArray(ObjFace[]::new);
+        obj.materialLibraries = materialLibraries.toArray(ResourcePath[]::new);
 
         return obj;
+    }
+
+    private static Stream<ObjFace> triangulateFace(ObjFace face) {
+        ObjVertexData[] vertices = face.getVertices();
+
+        return switch (face.getVertices().length) {
+            case 3 -> Stream.of(face);
+            case 4 -> Stream.of(
+                    new ObjFace(face.getMaterial(), new ObjVertexData[]{vertices[0], vertices[1], vertices[2]}),
+                    new ObjFace(face.getMaterial(), new ObjVertexData[]{vertices[2], vertices[3], vertices[0]})
+            );
+            default -> Stream.empty(); // no mod loader that I know supports them
+        };
+    }
+
+    private static Vector3f calculateNormal(Vector3f p0, Vector3f p1, Vector3f p2) {
+        Vector3f cross = p1.sub(p0).cross(p2.sub(p0));
+        if (cross.lengthSquared() == 0) {
+            return null;
+        }
+        return cross.normalize();
     }
 
     public Vector3f getVertex(int index) {
