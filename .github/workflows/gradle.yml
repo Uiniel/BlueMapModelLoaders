@@ -61,6 +61,8 @@ jobs:
         pattern: '^v.*'
         # Including pre-release
         prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Get version property
       id: current-version
