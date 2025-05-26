@@ -31,8 +31,6 @@ jobs:
     # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
     # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
     - name: Setup Gradle
-      env: 
-        ACTIONS_CACHE_SERVICE_V2: true
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
     - name: Build with Gradle Wrapper
@@ -46,18 +44,61 @@ jobs:
           forge/build/libs/*.jar
           neoforge/build/libs/*.jar
 
+  check-version:
 
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
-    # NOTE: The Gradle Wrapper is the default and recommended way to run Gradle (https://docs.gradle.org/current/userguide/gradle_wrapper.html).
-    # If your project does not have the Gradle Wrapper configured, you can use the following configuration to run Gradle with a specified version.
-    #
-    # - name: Setup Gradle
-    #   uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
-    #   with:
-    #     gradle-version: '8.9'
-    #
-    # - name: Build with Gradle 8.9
-    #   run: gradle build
+    steps:
+    - uses: actions/checkout@v4
+    - name: Get latest release version
+      id: release-version
+      uses: joutvhu/get-release@v1
+      with:
+        latest: true
+        # Tag name start with `v`
+        pattern: '^v.*'
+        # Including pre-release
+        prerelease: true
+
+    - name: Get version property
+      id: current-version
+      uses: christian-draeger/read-properties@1.1.1
+      with:
+        path: gradle.properties
+        properties: version
+
+    outputs:
+      new-tag-name: ${{ format("v{}", steps.current-version.outputs.version) }}
+      is-new-version: ${{ steps.release-version.outputs.tag_name == outputs.new-tag-name }}
+
+  publish:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [build, check-version]
+    if: needs.check-version.outputs.is-new-version
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Push new version tag
+      uses: actions-ecosystem/action-push-tag@v1
+      with:
+        tag: ${{ needs.check-version.outputs.new-tag-name }}
+        message: ${{ needs.check-version.outputs.new-tag-name }}
+        
+    - uses: actions/download-artifact@v4
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag-name: ${{ needs.check-version.outputs.new-tag-name }}
+        files: |
+          fabric/build/libs/*[0-9].jar
+          forge/build/libs/*[0-9].jar
+          neoforge/build/libs/*[0-9].jar      
+    
 
   dependency-submission:
 
