@@ -70,8 +70,8 @@ jobs:
         properties: version
 
     outputs:
-      new-tag-name: ${{ format("v{0}", steps.current-version.outputs.version) }}
-      is-new-version: ${{ steps.release-version.outputs.tag_name == format("v{0}", steps.current-version.outputs.version) }}
+      new-tag-name: ${{ format('v{0}', steps.current-version.outputs.version) }}
+      is-new-version: ${{ steps.release-version.outputs.tag_name == format('v{0}', steps.current-version.outputs.version) }}
 
   publish:
 
