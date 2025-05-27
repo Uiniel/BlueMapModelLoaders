@@ -90,7 +90,7 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v2
       with:
-        tag-name: ${{ needs.check-version.outputs.new-tag-name }}
+        tag_name: ${{ needs.check-version.outputs.new-tag-name }}
         files: |
           fabric/build/libs/*[0-9].jar
           forge/build/libs/*[0-9].jar
