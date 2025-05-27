@@ -73,7 +73,7 @@ jobs:
 
     outputs:
       new-tag-name: ${{ format('v{0}', steps.current-version.outputs.version) }}
-      is-new-version: ${{ steps.release-version.outputs.tag_name == format('v{0}', steps.current-version.outputs.version) }}
+      is-new-version: ${{ steps.release-version.outputs.tag_name != format('v{0}', steps.current-version.outputs.version) }}
 
   publish:
 
@@ -85,11 +85,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Push new version tag
-      uses: actions-ecosystem/action-push-tag@v1
-      with:
-        tag: ${{ needs.check-version.outputs.new-tag-name }}
-        message: ${{ needs.check-version.outputs.new-tag-name }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git tag ${{ needs.check-version.outputs.new-tag-name }}
+        git push origin ${{ needs.check-version.outputs.new-tag-name }}
         
     - uses: actions/download-artifact@v4
     - name: Release
