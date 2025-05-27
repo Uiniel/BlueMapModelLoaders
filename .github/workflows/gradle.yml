@@ -68,7 +68,7 @@ jobs:
 
     outputs:
       new-tag-name: ${{ format('v{0}', steps.current-version.outputs.version) }}
-      is-new-version: ${{ steps.release-version.outputs.tag_name != format('v{0}', steps.current-version.outputs.version) }}
+      old-tag-name: ${{ steps.release-version.outputs.tag_name }}
 
   publish:
 
@@ -76,7 +76,7 @@ jobs:
     permissions:
       contents: write
     needs: [build, check-version]
-    if: ${{ needs.check-version.outputs.is-new-version == true }}
+    if: ${{ needs.check-version.outputs.new-tag-name != needs.check-version.outputs.old-tag-name }}
 
     steps:
     - uses: actions/checkout@v4
