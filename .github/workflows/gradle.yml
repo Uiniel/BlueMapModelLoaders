@@ -97,7 +97,7 @@ jobs:
         git push origin ${{ needs.check-version.outputs.new-tag-name }}
     
 
-  # dependency-submission:
+  dependency-submission:
 
     runs-on: ubuntu-latest
     permissions:
