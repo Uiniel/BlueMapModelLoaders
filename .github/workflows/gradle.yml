@@ -28,11 +28,6 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
 
-    # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
-    # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
-
     - name: Build with Gradle Wrapper
       run: ./gradlew build
 
@@ -81,16 +76,10 @@ jobs:
     permissions:
       contents: write
     needs: [build, check-version]
-    if: needs.check-version.outputs.is-new-version
+    if: ${{ needs.check-version.outputs.is-new-version == true }}
 
     steps:
     - uses: actions/checkout@v4
-    - run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git tag ${{ needs.check-version.outputs.new-tag-name }}
-        git push origin ${{ needs.check-version.outputs.new-tag-name }}
-        
     - uses: actions/download-artifact@v4
     - name: Release
       uses: softprops/action-gh-release@v2
@@ -99,10 +88,16 @@ jobs:
         files: |
           fabric/build/libs/*[0-9].jar
           forge/build/libs/*[0-9].jar
-          neoforge/build/libs/*[0-9].jar      
+          neoforge/build/libs/*[0-9].jar
+
+    - run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git tag ${{ needs.check-version.outputs.new-tag-name }}
+        git push origin ${{ needs.check-version.outputs.new-tag-name }}
     
 
-  dependency-submission:
+  # dependency-submission:
 
     runs-on: ubuntu-latest
     permissions:
