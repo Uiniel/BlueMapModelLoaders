@@ -1,0 +1,121 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "*" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    - name: Build with Gradle Wrapper
+      run: ./gradlew build
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build
+        path: |
+          fabric/build/libs/*.jar
+          forge/build/libs/*.jar
+          neoforge/build/libs/*.jar
+
+  check-version:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Get latest release version
+      id: release-version
+      uses: joutvhu/get-release@v1
+      with:
+        latest: true
+        # Tag name start with `v`
+        pattern: '^v.*'
+        # Including pre-release
+        prerelease: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get version property
+      id: current-version
+      uses: christian-draeger/read-properties@1.1.1
+      with:
+        path: gradle.properties
+        properties: version
+
+    outputs:
+      new-tag-name: ${{ format('v{0}', steps.current-version.outputs.version) }}
+      old-tag-name: ${{ steps.release-version.outputs.tag_name }}
+
+  publish:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [build, check-version]
+    if: ${{ needs.check-version.outputs.new-tag-name != needs.check-version.outputs.old-tag-name }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git tag ${{ needs.check-version.outputs.new-tag-name }}
+        git push origin ${{ needs.check-version.outputs.new-tag-name }}
+        
+    - uses: actions/download-artifact@v4
+      with:
+        name: build
+    
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ needs.check-version.outputs.new-tag-name }}
+        files: |
+          fabric/build/libs/*[0-9].jar
+          forge/build/libs/*[0-9].jar
+          neoforge/build/libs/*[0-9].jar
+    
+
+  dependency-submission:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    # Generates and submits a dependency graph, enabling Dependabot Alerts for all project dependencies.
+    # See: https://github.com/gradle/actions/blob/main/dependency-submission/README.md
+    - name: Generate and submit dependency graph
+      uses: gradle/actions/dependency-submission@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0

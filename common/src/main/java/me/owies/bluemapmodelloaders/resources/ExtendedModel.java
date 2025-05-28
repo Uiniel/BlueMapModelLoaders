@@ -23,7 +23,7 @@ public class ExtendedModel {
     @Nullable protected ResourcePath<ObjModel> model;
     protected Map<String, TextureVariable> textures = new HashMap<>();
     protected boolean automatic_culling = true;
-    protected boolean shade_quads = false;
+    protected boolean shade_quads = true;
     protected boolean flip_v = false;
 
     public synchronized void optimize(ResourcePack resourcePack, ResourcePath<ObjModel> thisPath) {

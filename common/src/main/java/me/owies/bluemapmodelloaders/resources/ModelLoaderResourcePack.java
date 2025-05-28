@@ -137,7 +137,10 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
                 })
                 .flatMap(v -> Arrays.stream(v.getVariants()))
                 .forEach(variant -> {
-                    LoaderType loader = models.get(variant.getModel()).loader;
+                    ExtendedModel model = models.get(variant.getModel());
+                    if (model == null) return;
+
+                    LoaderType loader = model.loader;
                     if (loader != null) {
                         ((VariantMixin) variant).setRenderer(loader.getRenderer());
                     }
