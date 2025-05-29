@@ -3,6 +3,7 @@ package me.owies.bluemapmodelloaders.resources;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.Pack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePackExtension;
@@ -55,7 +56,7 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
                                 .filter(Files::isRegularFile)
                                 .forEach(file -> loadResource(root, file, 1, 3, key -> {
                                     try (BufferedReader reader = Files.newBufferedReader(file)) {
-                                        return ExtendedModel.fromJson(reader);
+                                        return ResourcesGson.INSTANCE.fromJson(reader, ExtendedModel.class);
                                     }
                                 }, models));
                     }, BlueMap.THREAD_POOL),

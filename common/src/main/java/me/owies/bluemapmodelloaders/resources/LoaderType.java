@@ -8,8 +8,10 @@ import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import me.owies.bluemapmodelloaders.renderer.CompositeModelRenderer;
 import me.owies.bluemapmodelloaders.renderer.EmptyModelRenderer;
 import me.owies.bluemapmodelloaders.renderer.ObjModelRenderer;
+import me.owies.bluemapmodelloaders.resources.composite.CompositeModelExtension;
 import me.owies.bluemapmodelloaders.resources.empty.EmptyModelExtension;
 import me.owies.bluemapmodelloaders.resources.obj.ObjModelExtension;
 
@@ -31,6 +33,13 @@ public interface LoaderType extends Keyed {
             EmptyModelRenderer.INSTANCE,
             new String[]{"forge:empty", "neoforge:empty", "porting_lib:empty"},
             EmptyModelExtension.class
+    );
+
+    LoaderType COMPOSITE = new Imp(
+            new Key("bluemapmodelloaders", "composite"),
+            CompositeModelRenderer.INSTANCE,
+            new String[]{"forge:composite", "neoforge:composite", "porting_lib:composite"},
+            CompositeModelExtension.class
     );
 
     LoaderType MISSING_MODEL_LOADER = new Imp(new Key("bluemapmodelloaders", "missing_model_loader"),
