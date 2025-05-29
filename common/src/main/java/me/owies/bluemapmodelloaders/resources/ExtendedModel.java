@@ -1,40 +1,64 @@
 package me.owies.bluemapmodelloaders.resources;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.annotations.SerializedName;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
 import lombok.Getter;
-import me.owies.bluemapmodelloaders.resources.objmodel.ObjModel;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-// Code copied and modified from de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model, because the private constructor prevented inheritance
-// Copyright (c) Blue <https://www.bluecolored.de>
 @Getter
 public class ExtendedModel {
     protected @Nullable ResourcePath<ExtendedModel> parent;
-    @SerializedName(value = "loader", alternate={"porting_lib:loader"})
-    @Nullable protected LoaderType loader;
+    @SerializedName(value = "loader", alternate = {"porting_lib:loader"})
+    @Nullable
+    protected LoaderType loader;
 
-    // Obj
-    @Nullable protected ResourcePath<ObjModel> model;
-    protected Map<String, TextureVariable> textures = new HashMap<>();
-    protected boolean automatic_culling = true;
-    protected boolean shade_quads = true;
-    protected boolean flip_v = false;
+    protected Map<LoaderType, ModelExtension> extensions;
 
-    public synchronized void optimize(ResourcePack resourcePack, ResourcePath<ObjModel> thisPath) {
-        for (var variable : this.textures.values()) {
-            variable.optimize(resourcePack);
+    public static ExtendedModel fromJson(Reader json) throws IOException {
+        ExtendedModel extendedModel = new ExtendedModel();
+
+        JsonObject model = JsonParser.parseReader(json).getAsJsonObject();
+        JsonElement loaderElement = model.get("loader");
+
+        if (loaderElement == null) {
+            loaderElement = model.get("porting_lib:loader");
+        }
+        if (loaderElement != null) {
+            extendedModel.loader = ResourcesGson.INSTANCE.fromJson(loaderElement, LoaderType.class);
         }
 
-        // TODO: model.optimize();
+        JsonElement parentElement = model.get("parent");
+
+        if (parentElement != null) {
+            extendedModel.parent = ResourcesGson.INSTANCE.fromJson(loaderElement, ResourcePath.class);
+        }
+
+        extendedModel.extensions = LoaderType.REGISTRY
+                .values()
+                .stream().
+                collect(Collectors.toMap(
+                        loaderType -> loaderType,
+                        loaderType -> ResourcesGson.INSTANCE.fromJson(model, loaderType.getModelExtensionClass())
+                ));
+
+        return extendedModel;
     }
 
-    public synchronized void applyParent(ModelLoaderResourcePack resourcePack) {
+    public void bake(ResourcePack blueMapResourcePack, ModelLoaderResourcePack modelLoaderResourcePack) {
+        extensions.values().forEach(ext -> ext.bake(blueMapResourcePack, modelLoaderResourcePack));
+    }
+
+    public void applyParent(ModelLoaderResourcePack resourcePack) {
         if (this.parent == null) return;
 
         // set parent to null early to avoid trying to resolve reference-loops
@@ -45,23 +69,11 @@ public class ExtendedModel {
         if (parent != null) {
             parent.applyParent(resourcePack);
 
-            parent.textures.forEach(this::applyTextureVariable);
-            if (this.model == null) {
-                this.model = parent.model;
-            }
-            if (this.loader == null) {
-                this.loader = parent.loader;
-            }
+            extensions.values().forEach(ext -> ext.applyParent(parent));
         }
     }
 
-    private synchronized void applyTextureVariable(String key, TextureVariable value) {
-        if (!this.textures.containsKey(key)) {
-            this.textures.put(key, value.copy());
-        }
-    }
-
-    public synchronized void calculateProperties(ResourcePack resourcePack) {
-        // TODO
+    public ModelExtension getExtension(LoaderType loaderType) {
+        return extensions.get(loaderType);
     }
 }

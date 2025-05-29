@@ -1,4 +1,4 @@
-package me.owies.bluemapmodelloaders.resources.objmodel;
+package me.owies.bluemapmodelloaders.resources.obj;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;

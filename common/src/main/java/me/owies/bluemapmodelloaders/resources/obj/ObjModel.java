@@ -1,4 +1,4 @@
-package me.owies.bluemapmodelloaders.resources.objmodel;
+package me.owies.bluemapmodelloaders.resources.obj;
 
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;

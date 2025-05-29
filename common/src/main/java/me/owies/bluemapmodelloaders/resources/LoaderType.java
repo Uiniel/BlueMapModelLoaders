@@ -8,7 +8,10 @@ import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import me.owies.bluemapmodelloaders.renderer.EmptyModelRenderer;
 import me.owies.bluemapmodelloaders.renderer.ObjModelRenderer;
+import me.owies.bluemapmodelloaders.resources.empty.EmptyModelExtension;
+import me.owies.bluemapmodelloaders.resources.obj.ObjModelExtension;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -18,22 +21,34 @@ public interface LoaderType extends Keyed {
 
     LoaderType OBJ = new Imp(
             new Key("bluemapmodelloaders", "obj"),
-            ObjModelRenderer.OBJ,
-            new String[]{"forge:obj", "neoforge:obj", "porting_lib:obj"}
+            ObjModelRenderer.INSTANCE,
+            new String[]{"forge:obj", "neoforge:obj", "porting_lib:obj"},
+            ObjModelExtension.class
+    );
+
+    LoaderType EMPTY = new Imp(
+            new Key("bluemapmodelloaders", "empty"),
+            EmptyModelRenderer.INSTANCE,
+            new String[]{"forge:empty", "neoforge:empty", "porting_lib:empty"},
+            EmptyModelExtension.class
     );
 
     LoaderType MISSING_MODEL_LOADER = new Imp(new Key("bluemapmodelloaders", "missing_model_loader"),
             BlockRendererType.MISSING,
-            new String[]{}
+            new String[]{},
+            EmptyModelExtension.class
     );
 
     Registry<LoaderType> REGISTRY = new Registry<>(
-            OBJ
+            OBJ,
+            EMPTY,
+            MISSING_MODEL_LOADER
     );
 
     boolean isLoaderFor(JsonElement json, Type typeOfT, JsonDeserializationContext context);
 
     BlockRendererType getRenderer();
+    Class<? extends ModelExtension> getModelExtensionClass();
 
     @RequiredArgsConstructor
     class Imp implements LoaderType {
@@ -43,6 +58,8 @@ public interface LoaderType extends Keyed {
         private final BlockRendererType renderer;
         @Getter
         private final String[] acceptedLoaderStrings;
+        @Getter
+        private final Class<? extends ModelExtension> modelExtensionClass;
 
         @Override
         public boolean isLoaderFor(JsonElement json, Type typeOfT, JsonDeserializationContext context) {

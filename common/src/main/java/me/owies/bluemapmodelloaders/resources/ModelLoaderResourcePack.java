@@ -3,7 +3,6 @@ package me.owies.bluemapmodelloaders.resources;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
-import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.Pack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePackExtension;
@@ -12,8 +11,8 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
 import me.owies.bluemapmodelloaders.mixin.ResourcePackAccessorMixin;
 import me.owies.bluemapmodelloaders.mixin.VariantMixin;
-import me.owies.bluemapmodelloaders.resources.objmodel.ObjMaterialLibrary;
-import me.owies.bluemapmodelloaders.resources.objmodel.ObjModel;
+import me.owies.bluemapmodelloaders.resources.obj.ObjMaterialLibrary;
+import me.owies.bluemapmodelloaders.resources.obj.ObjModel;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -45,7 +44,7 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
     public void loadResources(Path root) throws IOException {
         try {
             CompletableFuture.allOf(
-                    // load models (again, but this time with loader support)
+                    // load model extensions
                     CompletableFuture.runAsync(() -> {
                         list(root.resolve("assets"))
                                 .map(path -> path.resolve("models"))
@@ -56,7 +55,7 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
                                 .filter(Files::isRegularFile)
                                 .forEach(file -> loadResource(root, file, 1, 3, key -> {
                                     try (BufferedReader reader = Files.newBufferedReader(file)) {
-                                        return ResourcesGson.INSTANCE.fromJson(reader, ExtendedModel.class);
+                                        return ExtendedModel.fromJson(reader);
                                     }
                                 }, models));
                     }, BlueMap.THREAD_POOL),
@@ -120,6 +119,9 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
 
     @Override
     public void bake() throws IOException {
+        models.values().forEach(model -> model.applyParent(this));
+        models.values().forEach(model -> model.bake(BLUEMAP_RESOURCE_PACK, this));
+
         ((ResourcePackAccessorMixin) BLUEMAP_RESOURCE_PACK)
                 .getBlockStates()
                 .values()

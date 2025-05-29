@@ -1,4 +1,4 @@
-package me.owies.bluemapmodelloaders.resources.objmodel;
+package me.owies.bluemapmodelloaders.resources.obj;
 
 import lombok.Getter;
 

@@ -14,6 +14,6 @@ public class CommonClass {
 
     private static void addBluemapRegistryValues() {
         ResourcePackExtensionType.REGISTRY.register(ModelLoaderResourcePackFactory.INSTANCE);
-        BlockRendererType.REGISTRY.register(ObjModelRenderer.OBJ);
+        BlockRendererType.REGISTRY.register(ObjModelRenderer.INSTANCE);
     }
 }

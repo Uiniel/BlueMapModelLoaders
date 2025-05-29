@@ -1,4 +1,4 @@
-package me.owies.bluemapmodelloaders.resources.objmodel;
+package me.owies.bluemapmodelloaders.resources.obj;
 
 import com.flowpowered.math.vector.Vector3f;
 import lombok.Getter;
