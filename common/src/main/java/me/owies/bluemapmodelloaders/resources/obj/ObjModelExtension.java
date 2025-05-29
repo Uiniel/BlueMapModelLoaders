@@ -19,7 +19,7 @@ public class ObjModelExtension implements ModelExtension {
 
     @Override
     public synchronized void applyParent(ExtendedModel parent) {
-        ObjModelExtension parentObj = (ObjModelExtension) parent.getExtension(LoaderType.OBJ);
+        ObjModelExtension parentObj = parent.getExtension(LoaderType.OBJ);
 
         if (this.model == null) {
             this.model = parentObj.model;

@@ -7,17 +7,18 @@ import me.owies.bluemapmodelloaders.resources.LoaderType;
 import me.owies.bluemapmodelloaders.resources.ModelExtension;
 import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePack;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Getter
 public class CompositeModelExtension implements ModelExtension {
-    protected Map<String, CompositeChildModel> children;
-    protected Map<String, Boolean> visibility;
+    protected Map<String, CompositeChildModel> children = new HashMap<>();
+    protected Map<String, Boolean> visibility = new HashMap<>();
 
     @Override
     public void applyParent(ExtendedModel parent) {
-        CompositeModelExtension parentModel = (CompositeModelExtension) parent.getExtension(LoaderType.COMPOSITE);
+        CompositeModelExtension parentModel = parent.getExtension(LoaderType.COMPOSITE);
 
         for (Map.Entry<String, CompositeChildModel> entry : parentModel.children.entrySet()) {
             if (!children.containsKey(entry.getKey())) {

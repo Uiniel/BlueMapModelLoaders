@@ -103,6 +103,8 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
 
     @Override
     public Iterable<Texture> loadTextures(Path root) throws IOException {
+        // TODO: load textures from composite child models
+
         List<Texture> textures = new ArrayList<>();
 
         Path white_texture_path = root.resolve("assets/bluemapmodelloaders/textures/block/white.png");

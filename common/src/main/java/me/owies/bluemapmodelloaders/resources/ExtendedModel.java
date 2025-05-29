@@ -23,9 +23,9 @@ public class ExtendedModel {
     protected @Nullable ResourcePath<ExtendedModel> parent;
     @SerializedName(value = "loader", alternate = {"porting_lib:loader"})
     @Nullable
-    protected LoaderType loader;
+    protected LoaderType<?> loader;
 
-    protected Map<LoaderType, ModelExtension> extensions;
+    protected Map<LoaderType<?>, ModelExtension> extensions;
 
     public void bake(ResourcePack blueMapResourcePack, ModelLoaderResourcePack modelLoaderResourcePack) {
         extensions.values().forEach(ext -> ext.bake(blueMapResourcePack, modelLoaderResourcePack));
@@ -46,8 +46,8 @@ public class ExtendedModel {
         }
     }
 
-    public ModelExtension getExtension(LoaderType loaderType) {
-        return extensions.get(loaderType);
+    public <M extends ModelExtension> M getExtension(LoaderType<M> loaderType) {
+        return (M) extensions.get(loaderType);
     }
 
     public static class Adapter extends TypeAdapter<ExtendedModel> {

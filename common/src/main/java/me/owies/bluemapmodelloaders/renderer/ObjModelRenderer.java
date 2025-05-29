@@ -8,7 +8,6 @@ import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
-import de.bluecolored.bluemap.core.map.hires.block.BlockRenderer;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
@@ -32,8 +31,8 @@ import me.owies.bluemapmodelloaders.resources.obj.*;
 
 // Code copied and modified from de.bluecolored.bluemap.core.map.hires.block.ResourceModelRenderer
 // Copyright (c) Blue <https://www.bluecolored.de>
-public class ObjModelRenderer implements BlockRenderer {
-    public static final BlockRendererType INSTANCE = new BlockRendererType.Impl(new Key("bluemapmodelloaders",  "obj"), ObjModelRenderer::new);
+public class ObjModelRenderer implements ExtendedBlockRenderer {
+    public static final BlockRendererType TYPE = new BlockRendererType.Impl(new Key("bluemapmodelloaders",  "obj"), ObjModelRenderer::new);
 
     private final ResourcePack resourcePack;
     private final ModelLoaderResourcePack modelLoaderResourcePack;
@@ -67,24 +66,29 @@ public class ObjModelRenderer implements BlockRenderer {
     }
 
     public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color color) {
+        Model modelResource = variant.getModel().getResource(resourcePack::getModel);
+        ExtendedModel modelLoaderResource = modelLoaderResourcePack.getModels().get(variant.getModel());
+
+        if (modelLoaderResource == null) return;
+
+        renderModel(block, variant, modelResource, modelLoaderResource, blockModel, color);
+    }
+
+    @Override
+    public void renderModel(BlockNeighborhood block, Variant variant, Model model, ExtendedModel extendedModel, TileModelView blockModel, Color color) {
+
         this.block = block;
         this.blockModel = blockModel;
         this.blockColor = color;
         this.blockColorOpacity = 0f;
         this.variant = variant;
-        this.modelResource = variant.getModel().getResource(resourcePack::getModel);
-        ExtendedModel modelLoaderResource = modelLoaderResourcePack.getModels().get(variant.getModel());
+        this.modelResource = model;
 
-        if (modelLoaderResource == null) return;
-
-        this.objModelResource = (ObjModelExtension) modelLoaderResource.getExtension(LoaderType.OBJ);
+        this.objModelResource = extendedModel.getExtension(LoaderType.OBJ);
 
         if (this.objModelResource == null) return;
 
         this.tintColor.set(0, 0, 0, -1, true);
-
-        // render model
-        int modelStart = blockModel.getStart();
 
         ResourcePath<ObjModel> objPath = objModelResource.getModel();
         if (objPath == null) {
@@ -96,6 +100,9 @@ public class ObjModelRenderer implements BlockRenderer {
             Constants.LOG.warn("Missing obj model: " + variant.getModel());
             return;
         }
+
+        // render model
+        int modelStart = blockModel.getStart();
 
         buildModelObjResource(objModel, blockModel);
 
@@ -116,7 +123,6 @@ public class ObjModelRenderer implements BlockRenderer {
             float dz = (hashToFloat(block.getX(), block.getZ(), 345542) - 0.5f) * 0.75f;
             blockModel.translate(dx, 0, dz);
         }
-
     }
 
     private void buildModelObjResource(ObjModel model, TileModelView blockModel) {
@@ -290,5 +296,4 @@ public class ObjModelRenderer implements BlockRenderer {
         final long hash = x * 73428767L ^ z * 4382893L ^ seed * 457;
         return (hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000;
     }
-
 }

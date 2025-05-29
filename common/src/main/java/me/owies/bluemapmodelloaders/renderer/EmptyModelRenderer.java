@@ -12,7 +12,7 @@ import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 public class EmptyModelRenderer implements BlockRenderer {
-    public static final BlockRendererType INSTANCE = new BlockRendererType.Impl(new Key("bluemapmodelloaders",  "empty"), EmptyModelRenderer::new);
+    public static final BlockRendererType TYPE = new BlockRendererType.Impl(new Key("bluemapmodelloaders",  "empty"), EmptyModelRenderer::new);
 
     public EmptyModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
     }
