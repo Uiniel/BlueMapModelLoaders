@@ -2,12 +2,15 @@ package me.owies.bluemapmodelloaders.resources.obj;
 
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
 import me.owies.bluemapmodelloaders.resources.ExtendedModel;
 import me.owies.bluemapmodelloaders.resources.LoaderType;
 import me.owies.bluemapmodelloaders.resources.ModelExtension;
 import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePack;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.stream.Stream;
 
 @Getter
 public class ObjModelExtension implements ModelExtension {
@@ -29,5 +32,10 @@ public class ObjModelExtension implements ModelExtension {
     @Override
     public void bake(ResourcePack blueMapResourcePack, ModelLoaderResourcePack modelLoaderResourcePack) {
 
+    }
+
+    @Override
+    public Stream<ResourcePath<Texture>> getUsedTextures() {
+        return Stream.empty();
     }
 }

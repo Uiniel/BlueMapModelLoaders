@@ -1,6 +1,9 @@
 package me.owies.bluemapmodelloaders.resources.composite;
 
+import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
 import me.owies.bluemapmodelloaders.resources.ExtendedModel;
 import me.owies.bluemapmodelloaders.resources.LoaderType;
@@ -9,7 +12,9 @@ import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePack;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Getter
 public class CompositeModelExtension implements ModelExtension {
@@ -51,5 +56,23 @@ public class CompositeModelExtension implements ModelExtension {
             child.model.calculateProperties(blueMapResourcePack);
             child.extendedModel.bake(blueMapResourcePack, modelLoaderResourcePack);
         });
+    }
+
+    @Override
+    public Stream<ResourcePath<Texture>> getUsedTextures() {
+        return children
+                .values()
+                .stream()
+                .flatMap(child ->
+                        Stream.concat(
+                                child.extendedModel.getUsedTextures(),
+                                child.model
+                                        .getTextures()
+                                        .values()
+                                        .stream()
+                                        .map(TextureVariable::getTexturePath)
+                                        .filter(Objects::nonNull)
+                        )
+                );
     }
 }

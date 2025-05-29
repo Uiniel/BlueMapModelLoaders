@@ -10,12 +10,14 @@ import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @JsonAdapter(ExtendedModel.Adapter.class)
 @Getter
@@ -44,6 +46,10 @@ public class ExtendedModel {
 
             extensions.values().forEach(ext -> ext.applyParent(parent));
         }
+    }
+
+    public Stream<ResourcePath<Texture>> getUsedTextures() {
+        return extensions.values().stream().flatMap(ModelExtension::getUsedTextures);
     }
 
     public <M extends ModelExtension> M getExtension(LoaderType<M> loaderType) {
