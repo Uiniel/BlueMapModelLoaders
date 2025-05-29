@@ -1,40 +1,39 @@
 package me.owies.bluemapmodelloaders.resources;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
-import me.owies.bluemapmodelloaders.resources.objmodel.ObjModel;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-// Code copied and modified from de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model, because the private constructor prevented inheritance
-// Copyright (c) Blue <https://www.bluecolored.de>
+@JsonAdapter(ExtendedModel.Adapter.class)
 @Getter
 public class ExtendedModel {
     protected @Nullable ResourcePath<ExtendedModel> parent;
-    @SerializedName(value = "loader", alternate={"porting_lib:loader"})
-    @Nullable protected LoaderType loader;
+    @SerializedName(value = "loader", alternate = {"porting_lib:loader"})
+    @Nullable
+    protected LoaderType<?> loader;
 
-    // Obj
-    @Nullable protected ResourcePath<ObjModel> model;
-    protected Map<String, TextureVariable> textures = new HashMap<>();
-    protected boolean automatic_culling = true;
-    protected boolean shade_quads = true;
-    protected boolean flip_v = false;
+    protected Map<LoaderType<?>, ModelExtension> extensions;
 
-    public synchronized void optimize(ResourcePack resourcePack, ResourcePath<ObjModel> thisPath) {
-        for (var variable : this.textures.values()) {
-            variable.optimize(resourcePack);
-        }
-
-        // TODO: model.optimize();
+    public void bake(ResourcePack blueMapResourcePack, ModelLoaderResourcePack modelLoaderResourcePack) {
+        extensions.values().forEach(ext -> ext.bake(blueMapResourcePack, modelLoaderResourcePack));
     }
 
-    public synchronized void applyParent(ModelLoaderResourcePack resourcePack) {
+    public void applyParent(ModelLoaderResourcePack resourcePack) {
         if (this.parent == null) return;
 
         // set parent to null early to avoid trying to resolve reference-loops
@@ -45,23 +44,54 @@ public class ExtendedModel {
         if (parent != null) {
             parent.applyParent(resourcePack);
 
-            parent.textures.forEach(this::applyTextureVariable);
-            if (this.model == null) {
-                this.model = parent.model;
-            }
-            if (this.loader == null) {
-                this.loader = parent.loader;
-            }
+            extensions.values().forEach(ext -> ext.applyParent(parent));
         }
     }
 
-    private synchronized void applyTextureVariable(String key, TextureVariable value) {
-        if (!this.textures.containsKey(key)) {
-            this.textures.put(key, value.copy());
-        }
+    public Stream<ResourcePath<Texture>> getUsedTextures() {
+        return extensions.values().stream().flatMap(ModelExtension::getUsedTextures);
     }
 
-    public synchronized void calculateProperties(ResourcePack resourcePack) {
-        // TODO
+    public <M extends ModelExtension> M getExtension(LoaderType<M> loaderType) {
+        return (M) extensions.get(loaderType);
+    }
+
+    public static class Adapter extends TypeAdapter<ExtendedModel> {
+
+        @Override
+        public void write(JsonWriter out, ExtendedModel value) throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public ExtendedModel read(JsonReader in) throws IOException {
+            ExtendedModel extendedModel = new ExtendedModel();
+
+            JsonObject model = ResourcesGson.INSTANCE.fromJson(in, JsonObject.class);
+            JsonElement loaderElement = model.get("loader");
+
+            if (loaderElement == null) {
+                loaderElement = model.get("porting_lib:loader");
+            }
+            if (loaderElement != null) {
+                extendedModel.loader = ResourcesGson.INSTANCE.fromJson(loaderElement, LoaderType.class);
+            }
+
+            JsonElement parentElement = model.get("parent");
+
+            if (parentElement != null) {
+                extendedModel.parent = ResourcesGson.INSTANCE.fromJson(loaderElement, ResourcePath.class);
+            }
+
+            extendedModel.extensions = LoaderType.REGISTRY
+                    .values()
+                    .stream().
+                    collect(Collectors.toMap(
+                            loaderType -> loaderType,
+                            loaderType -> ResourcesGson.INSTANCE.fromJson(model, loaderType.getModelExtensionClass())
+                    ));
+
+            return extendedModel;
+        }
     }
 }

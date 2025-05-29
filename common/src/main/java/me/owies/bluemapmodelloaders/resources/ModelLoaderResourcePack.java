@@ -8,18 +8,21 @@ import de.bluecolored.bluemap.core.resources.pack.Pack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePackExtension;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.VariantSet;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.AnimationMeta;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
 import me.owies.bluemapmodelloaders.mixin.ResourcePackAccessorMixin;
 import me.owies.bluemapmodelloaders.mixin.VariantMixin;
-import me.owies.bluemapmodelloaders.resources.objmodel.ObjMaterialLibrary;
-import me.owies.bluemapmodelloaders.resources.objmodel.ObjModel;
+import me.owies.bluemapmodelloaders.resources.obj.ObjMaterialLibrary;
+import me.owies.bluemapmodelloaders.resources.obj.ObjModel;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -30,9 +33,12 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
     public static ResourcePack BLUEMAP_RESOURCE_PACK;
     public static ModelLoaderResourcePack INSTANCE;
 
-    @Getter private final Map<ResourcePath<ExtendedModel>, ExtendedModel> models;
-    @Getter private final Map<ResourcePath<ObjModel>, ObjModel> objModels;
-    @Getter private final Map<ResourcePath<ObjMaterialLibrary>, ObjMaterialLibrary> mtlLibraries;
+    @Getter
+    private final Map<ResourcePath<ExtendedModel>, ExtendedModel> models;
+    @Getter
+    private final Map<ResourcePath<ObjModel>, ObjModel> objModels;
+    @Getter
+    private final Map<ResourcePath<ObjMaterialLibrary>, ObjMaterialLibrary> mtlLibraries;
 
     public ModelLoaderResourcePack() {
         super(-1);
@@ -45,7 +51,7 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
     public void loadResources(Path root) throws IOException {
         try {
             CompletableFuture.allOf(
-                    // load models (again, but this time with loader support)
+                    // load model extensions
                     CompletableFuture.runAsync(() -> {
                         list(root.resolve("assets"))
                                 .map(path -> path.resolve("models"))
@@ -105,6 +111,35 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
     public Iterable<Texture> loadTextures(Path root) throws IOException {
         List<Texture> textures = new ArrayList<>();
 
+        models
+                .values()
+                .stream()
+                .flatMap(ExtendedModel::getUsedTextures)
+                .forEach(resourcePath -> {
+                    try {
+                        Path file = root.resolve("assets/" + resourcePath.getNamespace() + "/textures/" + resourcePath.getValue() + ".png");
+
+                        if (!Files.exists(file)) return;
+
+                        // load image
+                        BufferedImage image;
+                        try (InputStream in = Files.newInputStream(file)) {
+                            image = ImageIO.read(in);
+                        }
+
+                        // load animation
+                        AnimationMeta animation = null;
+                        Path animationPathFile = file.resolveSibling(file.getFileName() + ".mcmeta");
+                        if (Files.exists(animationPathFile)) {
+                            try (Reader in = Files.newBufferedReader(animationPathFile, StandardCharsets.UTF_8)) {
+                                animation = ResourcesGson.INSTANCE.fromJson(in, AnimationMeta.class);
+                            }
+                        }
+                        textures.add(Texture.from(resourcePath, image, animation));
+                    } catch (IOException e) {
+                    }
+                });
+
         Path white_texture_path = root.resolve("assets/bluemapmodelloaders/textures/block/white.png");
         if (Files.exists(white_texture_path)) {
             BufferedImage image;
@@ -120,6 +155,9 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
 
     @Override
     public void bake() throws IOException {
+        models.values().forEach(model -> model.applyParent(this));
+        models.values().forEach(model -> model.bake(BLUEMAP_RESOURCE_PACK, this));
+
         ((ResourcePackAccessorMixin) BLUEMAP_RESOURCE_PACK)
                 .getBlockStates()
                 .values()

@@ -8,7 +8,6 @@ import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
-import de.bluecolored.bluemap.core.map.hires.block.BlockRenderer;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
@@ -26,13 +25,14 @@ import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 import me.owies.bluemapmodelloaders.Constants;
 import me.owies.bluemapmodelloaders.resources.ExtendedModel;
+import me.owies.bluemapmodelloaders.resources.LoaderType;
 import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePack;
-import me.owies.bluemapmodelloaders.resources.objmodel.*;
+import me.owies.bluemapmodelloaders.resources.obj.*;
 
 // Code copied and modified from de.bluecolored.bluemap.core.map.hires.block.ResourceModelRenderer
 // Copyright (c) Blue <https://www.bluecolored.de>
-public class ObjModelRenderer implements BlockRenderer {
-    public static final BlockRendererType OBJ = new BlockRendererType.Impl(new Key("bluemapmodelloaders",  "obj"), ObjModelRenderer::new);
+public class ObjModelRenderer implements ExtendedBlockRenderer {
+    public static final BlockRendererType TYPE = new BlockRendererType.Impl(new Key("bluemapmodelloaders",  "obj"), ObjModelRenderer::new);
 
     private final ResourcePack resourcePack;
     private final ModelLoaderResourcePack modelLoaderResourcePack;
@@ -49,7 +49,7 @@ public class ObjModelRenderer implements BlockRenderer {
     private BlockNeighborhood block;
     private Variant variant;
     private Model modelResource;
-    private ExtendedModel modelLoaderResource;
+    private ObjModelExtension objModelResource;
     private TileModelView blockModel;
     private Color blockColor;
     private float blockColorOpacity;
@@ -66,22 +66,31 @@ public class ObjModelRenderer implements BlockRenderer {
     }
 
     public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color color) {
+        Model modelResource = variant.getModel().getResource(resourcePack::getModel);
+        ExtendedModel modelLoaderResource = modelLoaderResourcePack.getModels().get(variant.getModel());
+
+        if (modelLoaderResource == null) return;
+
+        renderModel(block, variant, modelResource, modelLoaderResource, blockModel, color);
+    }
+
+    @Override
+    public void renderModel(BlockNeighborhood block, Variant variant, Model model, ExtendedModel extendedModel, TileModelView blockModel, Color color) {
+
         this.block = block;
         this.blockModel = blockModel;
         this.blockColor = color;
         this.blockColorOpacity = 0f;
         this.variant = variant;
-        this.modelResource = variant.getModel().getResource(resourcePack::getModel);
-        this.modelLoaderResource = modelLoaderResourcePack.getModels().get(variant.getModel());
+        this.modelResource = model;
 
-        if (this.modelLoaderResource == null) return;
+        this.objModelResource = extendedModel.getExtension(LoaderType.OBJ);
+
+        if (this.objModelResource == null) return;
 
         this.tintColor.set(0, 0, 0, -1, true);
 
-        // render model
-        int modelStart = blockModel.getStart();
-
-        ResourcePath<ObjModel> objPath = modelLoaderResource.getModel();
+        ResourcePath<ObjModel> objPath = objModelResource.getModel();
         if (objPath == null) {
             Constants.LOG.warn("No obj model specified: " + variant.getModel());
             return;
@@ -91,6 +100,9 @@ public class ObjModelRenderer implements BlockRenderer {
             Constants.LOG.warn("Missing obj model: " + variant.getModel());
             return;
         }
+
+        // render model
+        int modelStart = blockModel.getStart();
 
         buildModelObjResource(objModel, blockModel);
 
@@ -111,11 +123,10 @@ public class ObjModelRenderer implements BlockRenderer {
             float dz = (hashToFloat(block.getX(), block.getZ(), 345542) - 0.5f) * 0.75f;
             blockModel.translate(dx, 0, dz);
         }
-
     }
 
     private void buildModelObjResource(ObjModel model, TileModelView blockModel) {
-        Logger.global.logDebug("Building model obj resource, for model " + modelLoaderResource.getModel());
+        Constants.LOG.debug("Building model obj resource, for model " + objModelResource.getModel());
         for (ObjFace face : model.getFaces()) {
             createObjTri(face, model,  blockModel);
         }
@@ -132,7 +143,7 @@ public class ObjModelRenderer implements BlockRenderer {
 
         int sunLight = 15;
         int blockLight = 15;
-        if (modelLoaderResource.isShade_quads()) {
+        if (objModelResource.isShade_quads()) {
             // light calculation
             Vector3f face_pos = p0.add(p1).add(p2).mul(1 / 3f).add(new Vector3f(-0.5, -0.5, -0.5)).round(); // in case of models bigger than one block
             ExtendedBlock faceBlockLocation = getRotationRelativeBlock(face_pos);
@@ -174,7 +185,7 @@ public class ObjModelRenderer implements BlockRenderer {
             }
         }
         if (material == ObjModel.MISSING_MATERIAL) {
-            Constants.LOG.warn(modelLoaderResource.getModel() + ": material not found (" + face.getMaterial() + ")");
+            Constants.LOG.warn(objModelResource.getModel() + ": material not found (" + face.getMaterial() + ")");
         }
 
         ResourcePath<Texture> texturePath = material.getTexture().getTexturePath(modelResource.getTextures()::get);
@@ -190,7 +201,7 @@ public class ObjModelRenderer implements BlockRenderer {
             uv2 = model.getTextureCoord(p2Data.getUvIndex());
         }
 
-        if (modelLoaderResource.isFlip_v()) {
+        if (objModelResource.isFlip_v()) {
             uv0 = uv0.mul(1, -1).add(0, 1);
             uv1 = uv1.mul(1, -1).add(0, 1);
             uv2 = uv2.mul(1, -1).add(0, 1);
@@ -285,5 +296,4 @@ public class ObjModelRenderer implements BlockRenderer {
         final long hash = x * 73428767L ^ z * 4382893L ^ seed * 457;
         return (hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000;
     }
-
 }
