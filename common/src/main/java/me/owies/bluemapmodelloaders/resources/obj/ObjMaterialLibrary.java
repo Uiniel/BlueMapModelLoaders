@@ -27,8 +27,6 @@ public class ObjMaterialLibrary {
             switch (args[0]) {
                 case "newmtl" -> {
                     if (args.length < 2) {
-                        Logger.global.logWarning("Missing material name");
-                        // exception
                         continue;
                     }
                     currentMaterial = new ObjMaterial();
@@ -37,15 +35,12 @@ public class ObjMaterialLibrary {
 
                 case "map_Kd" -> {
                     if (args.length < 2) {
-                        Logger.global.logWarning("No texture specified");
                         continue;
                     }
                     if (args[1].charAt(0) != '#') {
-                        Logger.global.logWarning("Can only reference textures specified in the json");
                         continue;
                     }
                     if (currentMaterial == null) {
-                        Logger.global.logWarning("No material declaration found");
                         continue;
                     }
                     currentMaterial.setTexture(new TextureVariable(args[1].substring(1)));
@@ -53,11 +48,9 @@ public class ObjMaterialLibrary {
 
                 case "Kd" -> {
                     if (args.length < 4) {
-                        Logger.global.logWarning("No color specified");
                         continue;
                     }
                     if (currentMaterial == null) {
-                        Logger.global.logWarning("No material declaration found");
                         continue;
                     }
                     if (currentMaterial.getTexture() == ObjMaterial.MISSING_TEXTURE) {
@@ -77,11 +70,9 @@ public class ObjMaterialLibrary {
 
                 case "Tr" -> {
                     if (args.length < 2) {
-                        Logger.global.logWarning("No transparency specified");
                         continue;
                     }
                     if (currentMaterial == null) {
-                        Logger.global.logWarning("No material declaration found");
                         continue;
                     }
                     currentMaterial.setOpacity(1.0f - Float.parseFloat(args[1]));
@@ -89,11 +80,9 @@ public class ObjMaterialLibrary {
 
                 case "d" -> {
                     if (args.length < 2) {
-                        Logger.global.logWarning("No transparency specified");
                         continue;
                     }
                     if (currentMaterial == null) {
-                        Logger.global.logWarning("No material declaration found");
                         continue;
                     }
                     currentMaterial.setOpacity(Float.parseFloat(args[1]));
@@ -101,11 +90,9 @@ public class ObjMaterialLibrary {
 
                 case "forge_TintIndex" -> {
                     if (args.length < 2) {
-                        Logger.global.logWarning("No tint index specified");
                         continue;
                     }
                     if (currentMaterial == null) {
-                        Logger.global.logWarning("No material declaration found");
                         continue;
                     }
                     currentMaterial.setTintIndex(Integer.parseInt(args[1]));

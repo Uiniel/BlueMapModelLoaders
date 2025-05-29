@@ -74,8 +74,6 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
 
             BlockRenderer renderer = blockRenderers.get(rendererType);
 
-            Constants.LOG.info("Rendering child model of type : " + rendererType);
-
             if (renderer instanceof ExtendedBlockRenderer) {
                 ((ExtendedBlockRenderer) renderer).renderModel(block, variant, childModel.getModel(), childModel.getExtendedModel(), tileModel, blockColor);
             } else {

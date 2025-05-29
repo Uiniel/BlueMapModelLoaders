@@ -126,7 +126,7 @@ public class ObjModelRenderer implements ExtendedBlockRenderer {
     }
 
     private void buildModelObjResource(ObjModel model, TileModelView blockModel) {
-        Logger.global.logDebug("Building model obj resource, for model " + objModelResource.getModel());
+        Constants.LOG.debug("Building model obj resource, for model " + objModelResource.getModel());
         for (ObjFace face : model.getFaces()) {
             createObjTri(face, model,  blockModel);
         }
