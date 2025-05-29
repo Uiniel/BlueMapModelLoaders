@@ -64,6 +64,7 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
         if (compositeModelResource == null) return;
 
         Model originalVariantModel = variant.getModel().getResource(resourcePack::getModel);
+        int modelStart = tileModel.getStart();
 
         for (CompositeChildModel childModel: compositeModelResource.getChildren().values()) {
             BlockRendererType rendererType = BlockRendererType.DEFAULT;
@@ -73,6 +74,7 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
             }
 
             BlockRenderer renderer = blockRenderers.get(rendererType);
+            tileModel.initialize();
 
             if (renderer instanceof ExtendedBlockRenderer) {
                 ((ExtendedBlockRenderer) renderer).renderModel(block, variant, childModel.getModel(), childModel.getExtendedModel(), tileModel, blockColor);
@@ -83,6 +85,7 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
             }
         }
 
+        tileModel.initialize(modelStart);
         variant.getModel().setResource(originalVariantModel);
     }
 }
