@@ -13,9 +13,9 @@
   },
   "license": "${license}",
   "icon": "${mod_id}.png",
-  "environment": "*",
+  "environment": "server",
   "entrypoints": {
-    "main": [
+    "server": [
       "me.owies.bluemapmodelloaders.BlueMapModelLoaders"
     ]
   },
@@ -26,10 +26,7 @@
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
     "fabric-api": "*",
-    "minecraft": "${minecraft_version}",
+    "bluemap": "5.7.x",
     "java": ">=${java_version}"
-  },
-  "suggests": {
-    "another-mod": "*"
   }
 }

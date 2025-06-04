@@ -13,6 +13,7 @@ logoFile = "${mod_id}.png" #optional
 credits = "${credits}" #optional
 authors = "${mod_author}" #optional
 description = '''${description}''' #mandatory Supports multiline text
+displayTest = "IGNORE_SERVER_VERSION"
 [[dependencies."${mod_id}"]] #optional
 modId = "forge" #mandatory
 mandatory = true #mandatory
@@ -20,8 +21,8 @@ versionRange = "[${forge_version},)" #mandatory
 ordering = "NONE" # The order that this dependency should load in relation to your mod, required to be either 'BEFORE' or 'AFTER' if the dependency is not mandatory
 side = "BOTH" # Side this dependency is applied on - 'BOTH', 'CLIENT' or 'SERVER'
 [[dependencies."${mod_id}"]]
-modId = "minecraft"
+modId = "bluemap"
 mandatory = true
-versionRange = "${minecraft_version_range}"
+versionRange = "[5.7,5.8)"
 ordering = "NONE"
-side = "BOTH"
+side = "SERVER"

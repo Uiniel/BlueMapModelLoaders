@@ -1,11 +1,11 @@
 package me.owies.bluemapmodelloaders;
 
-import net.fabricmc.api.ModInitializer;
+import net.fabricmc.api.DedicatedServerModInitializer;
 
-public class BlueMapModelLoaders implements ModInitializer {
+public class BlueMapModelLoaders implements DedicatedServerModInitializer {
 
     @Override
-    public void onInitialize() {
+    public void onInitializeServer() {
         CommonClass.init();
     }
 }

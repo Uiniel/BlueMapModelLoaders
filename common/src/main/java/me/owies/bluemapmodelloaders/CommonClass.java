@@ -10,8 +10,8 @@ import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePackFactory;
 public class CommonClass {
 
     public static void init() {
-
         addBluemapRegistryValues();
+        Constants.LOG.info("BlueMapModelLoaders loaded.");
     }
 
     private static void addBluemapRegistryValues() {
