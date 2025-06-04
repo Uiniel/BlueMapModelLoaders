@@ -188,7 +188,14 @@ public class ObjModelRenderer implements ExtendedBlockRenderer {
             Constants.LOG.warn(objModelResource.getModel() + ": material not found (" + face.getMaterial() + ")");
         }
 
-        ResourcePath<Texture> texturePath = material.getTexture().getTexturePath(modelResource.getTextures()::get);
+        // the mtl can be reused for different models with different textures and calling material.getTexture().getTexturePath(...) would cache the texture
+        ResourcePath<Texture> texturePath;
+        if (material.getTexture().isReference()) {
+            texturePath = modelResource.getTextures().get(material.getTexture().getReferenceName()).getTexturePath(modelResource.getTextures()::get);
+        } else {
+            texturePath = material.getTexture().getTexturePath();
+        }
+
         int textureId = textureGallery.get(texturePath);
         tileModel.setMaterialIndex(start, textureId);
 
