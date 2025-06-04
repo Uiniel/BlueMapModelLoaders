@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
@@ -12,6 +13,7 @@ import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
+import me.owies.bluemapmodelloaders.Constants;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -43,6 +45,10 @@ public class ExtendedModel {
         ExtendedModel parent = parentPath.getResource(resourcePack.getModels()::get);
         if (parent != null) {
             parent.applyParent(resourcePack);
+
+            if (loader == null) {
+                loader = parent.loader;
+            }
 
             extensions.values().forEach(ext -> ext.applyParent(parent));
         }
@@ -80,7 +86,7 @@ public class ExtendedModel {
             JsonElement parentElement = model.get("parent");
 
             if (parentElement != null) {
-                extendedModel.parent = ResourcesGson.INSTANCE.fromJson(loaderElement, ResourcePath.class);
+                extendedModel.parent = ResourcesGson.INSTANCE.fromJson(parentElement, new TypeToken<>() {});
             }
 
             extendedModel.extensions = LoaderType.REGISTRY

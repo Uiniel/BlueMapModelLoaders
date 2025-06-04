@@ -178,7 +178,7 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
                     ExtendedModel model = models.get(variant.getModel());
                     if (model == null) return;
 
-                    LoaderType loader = model.loader;
+                    LoaderType<?> loader = model.loader;
                     if (loader != null) {
                         ((VariantMixin) variant).setRenderer(loader.getRenderer());
                     }
