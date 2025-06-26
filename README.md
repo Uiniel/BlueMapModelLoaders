@@ -2,7 +2,7 @@
 A Minecraft mod that allows [BlueMap](https://github.com/BlueMap-Minecraft/BlueMap) to render non-vanilla models that use model loaders provided by forge/neoforge/etc.
 
 - Requires Fabric, Forge or NeoForge
-- Requires BlueMap 5.7
+- Requires BlueMap 5.7 - 5.9
 
 ## Included model loaders
 - obj

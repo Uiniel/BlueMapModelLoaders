@@ -25,7 +25,7 @@ side = "BOTH" # Side this dependency is applied on - 'BOTH', 'CLIENT' or 'SERVER
 [[dependencies."${mod_id}"]]
 modId = "bluemap"
 type = "required" #mandatory Can be one of "required", "optional", "incompatible" or "discouraged"
-versionRange = "[5.7,5.8)"
+versionRange = "[5.7,5.10)"
 ordering = "NONE"
 side = "SERVER"
 
