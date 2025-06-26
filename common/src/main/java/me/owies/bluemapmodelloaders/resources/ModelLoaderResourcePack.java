@@ -166,6 +166,10 @@ public class ModelLoaderResourcePack extends Pack implements ResourcePackExtensi
                     Stream<VariantSet> variants = Stream.empty();
                     if (blockState.getVariants() != null) {
                         variants = Arrays.stream(blockState.getVariants().getVariants());
+                        VariantSet defaultVariant = blockState.getVariants().getDefaultVariant();
+                        if (defaultVariant != null) {
+                            variants = Stream.concat(variants, Stream.of(blockState.getVariants().getDefaultVariant()));
+                        }
                     }
                     Stream<VariantSet> multipart = Stream.empty();
                     if (blockState.getMultipart() != null) {
