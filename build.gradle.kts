@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("com.gradleup.shadow") version "8.3.7"
+    id("maven-publish")
 }
 
 group = "me.owies"
@@ -50,4 +51,12 @@ tasks.processResources {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+publishing {
+    publications {
+        register("mavenJava", MavenPublication::class) {
+            from(components["java"])
+        }
+    }
 }
