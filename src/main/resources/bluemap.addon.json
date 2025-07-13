@@ -1,0 +1,5 @@
+{
+  "id": "BlueMapModelLoaders",
+  "entrypoint": "me.owies.bluemapmodelloaders.BlueMapModelLoaders",
+  "version": "${version}"
+}
