@@ -4,7 +4,6 @@ plugins {
 }
 
 group = "me.owies"
-version = "0.3.0"
 
 java {
     toolchain {
@@ -36,6 +35,11 @@ dependencies {
 
 tasks.shadowJar {
     relocate("com.technicjelle.BMUtils", "${project.group}.${project.name}.BMUtils")
+    archiveFileName = "${project.name}-${project.version}.jar"
+}
+
+tasks.build {
+    dependsOn("shadowJar")
 }
 
 tasks.processResources {

@@ -39,9 +39,7 @@ jobs:
       with:
         name: build
         path: |
-          fabric/build/libs/*.jar
-          forge/build/libs/*.jar
-          neoforge/build/libs/*.jar
+          build/libs/*.jar
 
   check-version:
 
@@ -80,7 +78,7 @@ jobs:
     permissions:
       contents: write
     needs: [build, check-version]
-    if: ${{ needs.check-version.outputs.new-tag-name != needs.check-version.outputs.old-tag-name }}
+    if: ${{ needs.check-version.outputs.new-tag-name != needs.check-version.outputs.old-tag-name && github.ref == 'refs/heads/main' }}
 
     steps:
     - uses: actions/checkout@v4
@@ -99,10 +97,7 @@ jobs:
       with:
         tag_name: ${{ needs.check-version.outputs.new-tag-name }}
         files: |
-          fabric/build/libs/*[0-9].jar
-          forge/build/libs/*[0-9].jar
-          neoforge/build/libs/*[0-9].jar
-    
+          build/libs/*.jar
 
   dependency-submission:
 
