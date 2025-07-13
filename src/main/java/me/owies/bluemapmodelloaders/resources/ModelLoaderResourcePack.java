@@ -137,32 +137,17 @@ public class ModelLoaderResourcePack implements ResourcePackExtension {
         blueMapResourcePack
                 .getBlockStates()
                 .values()
-                .stream()
-                .flatMap(blockState -> {
-                    Stream<VariantSet> variants = Stream.empty();
-                    if (blockState.getVariants() != null) {
-                        variants = Arrays.stream(blockState.getVariants().getVariants());
-                        VariantSet defaultVariant = blockState.getVariants().getDefaultVariant();
-                        if (defaultVariant != null) {
-                            variants = Stream.concat(variants, Stream.of(blockState.getVariants().getDefaultVariant()));
-                        }
-                    }
-                    Stream<VariantSet> multipart = Stream.empty();
-                    if (blockState.getMultipart() != null) {
-                        multipart = Arrays.stream(blockState.getMultipart().getParts());
-                    }
-                    return Stream.concat(variants, multipart);
-                })
-                .flatMap(v -> Arrays.stream(v.getVariants()))
-                .forEach(variant -> {
-                    ExtendedModel model = models.get(variant.getModel());
-                    if (model == null) return;
+                .forEach(blockState -> {
+                    blockState.forEach(variant -> {
+                        ExtendedModel model = models.get(variant.getModel());
+                        if (model == null) return;
 
-                    LoaderType<?> loader = model.loader;
-                    if (loader != null) {
-                        variant.setRenderer(loader.getRenderer());
-                        Constants.LOG.logDebug("CustomRenderer found: " + variant.getModel().getFormatted());
-                    }
+                        LoaderType<?> loader = model.loader;
+                        if (loader != null) {
+                            variant.setRenderer(loader.getRenderer());
+                            Constants.LOG.logDebug("CustomRenderer found: " + variant.getModel().getFormatted());
+                        }
+                    });
                 });
     }
 }
