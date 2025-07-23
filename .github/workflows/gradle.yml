@@ -97,7 +97,7 @@ jobs:
       with:
         tag_name: ${{ needs.check-version.outputs.new-tag-name }}
         files: |
-          build/libs/*.jar
+          BlueMapModelLoaders-*.jar
 
   dependency-submission:
 
