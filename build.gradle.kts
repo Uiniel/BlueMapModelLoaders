@@ -16,7 +16,7 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven("https://repo.bluecolored.de/releases")
-    maven("https://repo.bluecolored.de/snapshots")
+    // maven("https://repo.bluecolored.de/snapshots")
 }
 
 dependencies {
@@ -25,7 +25,7 @@ dependencies {
 
     implementation("com.technicjelle:BMUtils:4.3.1")
 
-    compileOnly("de.bluecolored:bluemap-core:5.9-feat.atlases-13")
+    compileOnly("de.bluecolored:bluemap-core:5.10")
     compileOnly("de.bluecolored:bluemap-common:5.7")
     compileOnly("de.bluecolored:bluemap-api:2.7.4")
     compileOnly("me.owies:bluemapmodelloaders-common:0.2.2")
