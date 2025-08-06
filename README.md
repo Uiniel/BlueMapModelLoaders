@@ -3,7 +3,7 @@ A Minecraft mod that allows [BlueMap](https://github.com/BlueMap-Minecraft/BlueM
 
 ## Installation
 
-### BlueMap >5.10
+### BlueMap >=5.10
 Download the [current version](https://github.com/Uiniel/BlueMapModelLoaders/releases/latest) and place the jar file into the packs folder in the BlueMap config directory.
 
 ### BlueMap 5.7 - 5.9
