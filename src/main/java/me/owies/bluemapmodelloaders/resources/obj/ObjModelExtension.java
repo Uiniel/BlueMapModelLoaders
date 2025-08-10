@@ -2,7 +2,6 @@ package me.owies.bluemapmodelloaders.resources.obj;
 
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
 import me.owies.bluemapmodelloaders.resources.ExtendedModel;
 import me.owies.bluemapmodelloaders.resources.LoaderType;
@@ -10,18 +9,31 @@ import me.owies.bluemapmodelloaders.resources.ModelExtension;
 import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePack;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.stream.Stream;
-
 @Getter
 public class ObjModelExtension implements ModelExtension {
     @Nullable
     protected ResourcePath<ObjModel> model;
     @Nullable
-    protected Boolean automatic_culling = true;
+    protected Boolean automatic_culling;
     @Nullable
-    protected Boolean shade_quads = true;
+    protected Boolean shade_quads;
     @Nullable
-    protected Boolean flip_v = false;
+    protected Boolean flip_v;
+
+    public boolean isAutomaticCulling() {
+        if (automatic_culling == null) return true;
+        return automatic_culling;
+    }
+
+    public boolean isShadeQuads() {
+        if (shade_quads == null) return true;
+        return shade_quads;
+    }
+
+    public boolean isFlipV() {
+        if (flip_v == null) return false;
+        return flip_v;
+    }
 
     @Override
     public synchronized void applyParent(ExtendedModel parent) {

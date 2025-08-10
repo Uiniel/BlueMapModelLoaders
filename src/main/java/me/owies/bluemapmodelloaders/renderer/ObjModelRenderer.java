@@ -144,7 +144,7 @@ public class ObjModelRenderer implements ExtendedBlockRenderer {
 
         int sunLight = 15;
         int blockLight = 15;
-        if (objModelResource.isShade_quads()) {
+        if (objModelResource.isShadeQuads()) {
             // light calculation
             Vector3f face_pos = p0.add(p1).add(p2).mul(1 / 3f).add(new Vector3f(-0.5, -0.5, -0.5)).round(); // in case of models bigger than one block
             ExtendedBlock faceBlockLocation = getRotationRelativeBlock(face_pos);
@@ -209,7 +209,7 @@ public class ObjModelRenderer implements ExtendedBlockRenderer {
             uv2 = model.getTextureCoord(p2Data.getUvIndex());
         }
 
-        if (objModelResource.isFlip_v()) {
+        if (objModelResource.isFlipV()) {
             uv0 = uv0.mul(1, -1).add(0, 1);
             uv1 = uv1.mul(1, -1).add(0, 1);
             uv2 = uv2.mul(1, -1).add(0, 1);
