@@ -16,9 +16,12 @@ import java.util.stream.Stream;
 public class ObjModelExtension implements ModelExtension {
     @Nullable
     protected ResourcePath<ObjModel> model;
-    protected boolean automatic_culling = true;
-    protected boolean shade_quads = true;
-    protected boolean flip_v = false;
+    @Nullable
+    protected Boolean automatic_culling = true;
+    @Nullable
+    protected Boolean shade_quads = true;
+    @Nullable
+    protected Boolean flip_v = false;
 
     @Override
     public synchronized void applyParent(ExtendedModel parent) {
@@ -26,6 +29,18 @@ public class ObjModelExtension implements ModelExtension {
 
         if (this.model == null) {
             this.model = parentObj.model;
+        }
+
+        if (this.automatic_culling == null) {
+            this.automatic_culling = parentObj.automatic_culling;
+        }
+
+        if (this.shade_quads == null) {
+            this.shade_quads = parentObj.shade_quads;
+        }
+
+        if (this.flip_v == null) {
+            this.flip_v = parentObj.flip_v;
         }
     }
 
