@@ -49,8 +49,4 @@ public class ObjModelExtension implements ModelExtension {
 
     }
 
-    @Override
-    public Stream<ResourcePath<Texture>> getUsedTextures() {
-        return Stream.empty();
-    }
 }
