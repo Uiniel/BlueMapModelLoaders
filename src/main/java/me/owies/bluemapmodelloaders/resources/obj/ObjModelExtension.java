@@ -1,5 +1,6 @@
 package me.owies.bluemapmodelloaders.resources.obj;
 
+import com.google.gson.annotations.SerializedName;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import lombok.Getter;
@@ -14,10 +15,12 @@ public class ObjModelExtension implements ModelExtension {
     @Nullable
     protected ResourcePath<ObjModel> model;
     @Nullable
+    @SerializedName(value = "automatic_culling", alternate = "detectCullableFaces")
     protected Boolean automatic_culling;
     @Nullable
     protected Boolean shade_quads;
     @Nullable
+    @SerializedName(value = "flip_v", alternate = {"flip-v"})
     protected Boolean flip_v;
 
     public boolean isAutomaticCulling() {
