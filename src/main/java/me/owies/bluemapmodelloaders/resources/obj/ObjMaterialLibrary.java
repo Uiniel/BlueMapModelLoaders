@@ -1,6 +1,6 @@
 package me.owies.bluemapmodelloaders.resources.obj;
 
-import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
 import de.bluecolored.bluemap.core.util.math.Color;
 import lombok.Getter;
@@ -37,13 +37,14 @@ public class ObjMaterialLibrary {
                     if (args.length < 2) {
                         continue;
                     }
-                    if (args[1].charAt(0) != '#') {
-                        continue;
-                    }
                     if (currentMaterial == null) {
                         continue;
                     }
-                    currentMaterial.setTexture(new TextureVariable(args[1].substring(1)));
+                    if (args[1].charAt(0) != '#') {
+                        currentMaterial.setTexture(new TextureVariable(new ResourcePath<>(args[1])));
+                    } else {
+                        currentMaterial.setTexture(new TextureVariable(args[1].substring(1)));
+                    }
                 }
 
                 case "Kd" -> {
