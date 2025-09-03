@@ -1,5 +1,7 @@
 package me.owies.bluemapmodelloaders.renderer;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
@@ -12,20 +14,17 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
-import me.owies.bluemapmodelloaders.Constants;
 import me.owies.bluemapmodelloaders.resources.ExtendedModel;
 import me.owies.bluemapmodelloaders.resources.LoaderType;
 import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePack;
 import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePackFactory;
 import me.owies.bluemapmodelloaders.resources.composite.CompositeChildModel;
 import me.owies.bluemapmodelloaders.resources.composite.CompositeModelExtension;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 
 public class CompositeModelRenderer implements ExtendedBlockRenderer {
     public static final BlockRendererType TYPE = new BlockRendererType.Impl(new Key("bluemapmodelloaders",  "composite"), CompositeModelRenderer::new);
-    private final Map<BlockRendererType, BlockRenderer> blockRenderers;
+    private static LoadingCache<BlockRendererType, BlockRenderer> blockRenderers = null;
     private final ModelLoaderResourcePack modelLoaderResourcePack;
     private final ResourcePack resourcePack;
 
@@ -33,18 +32,10 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
 
     public CompositeModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
-        this.blockRenderers = BlockRendererType.REGISTRY
-                .values()
-                .stream()
-                .collect(Collectors.toMap(
-                        type -> type,
-                        type -> {
-                            if (type == TYPE) {
-                                return this; // prevent infinite recursion
-                            }
-                            return type.create(resourcePack, textureGallery, renderSettings);
-                        }
-                ));
+        if (blockRenderers == null) { // prevent infinite recursion
+            blockRenderers = Caffeine.newBuilder()
+                            .build(type -> type.create(resourcePack, textureGallery, renderSettings));
+        }
         modelLoaderResourcePack = resourcePack.getExtension(ModelLoaderResourcePackFactory.INSTANCE);
     }
 
@@ -65,7 +56,6 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
 
         if (compositeModelResource == null) return;
 
-        Model originalVariantModel = variant.getModel().getResource(resourcePack.getModels()::get);
         int modelStart = tileModel.getStart();
 
         for (CompositeChildModel childModel: compositeModelResource.getChildren().values()) {
