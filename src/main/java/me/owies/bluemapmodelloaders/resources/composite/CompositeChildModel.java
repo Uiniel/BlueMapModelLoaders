@@ -20,6 +20,13 @@ import java.io.IOException;
 @JsonAdapter(CompositeChildModel.Adapter.class)
 @Getter
 public class CompositeChildModel {
+    private CompositeChildModel() {}
+
+    public CompositeChildModel(Model model, ExtendedModel extendedModel) {
+        this.model = model;
+        this.extendedModel = extendedModel;
+    }
+
     protected Model model;
     protected ExtendedModel extendedModel;
 

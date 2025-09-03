@@ -5,6 +5,7 @@ import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRenderer;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
+import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
@@ -68,25 +69,30 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
         int modelStart = tileModel.getStart();
 
         for (CompositeChildModel childModel: compositeModelResource.getChildren().values()) {
-            BlockRendererType rendererType = BlockRendererType.DEFAULT;
-            LoaderType<?> loaderType = childModel.getExtendedModel().getLoader();
-            if (childModel.getExtendedModel().getLoader() != null) {
-                rendererType = loaderType.getRenderer();
-            }
-
-            BlockRenderer renderer = blockRenderers.get(rendererType);
-            tileModel.initialize();
-
-            if (renderer instanceof ExtendedBlockRenderer) {
-                ((ExtendedBlockRenderer) renderer).renderModel(block, variant, childModel.getModel(), childModel.getExtendedModel(), tileModel, blockColor);
-            } else {
-                variant.getModel().setResource(childModel.getModel());
-
-                renderer.render(block, variant, tileModel, blockColor);
-            }
+            renderCompositeChildModel(block, variant, model, extendedModel, tileModel, blockColor, childModel);
         }
 
         tileModel.initialize(modelStart);
-        variant.getModel().setResource(originalVariantModel);
+    }
+
+    public void renderCompositeChildModel(BlockNeighborhood block, Variant parent_variant, Model model, ExtendedModel extendedModel, TileModelView tileModel, Color blockColor, CompositeChildModel childModel) {
+        BlockRendererType rendererType = BlockRendererType.DEFAULT;
+        LoaderType<?> loaderType = childModel.getExtendedModel().getLoader();
+        if (childModel.getExtendedModel().getLoader() != null) {
+            rendererType = loaderType.getRenderer();
+        }
+
+        BlockRenderer renderer = blockRenderers.get(rendererType);
+        tileModel.initialize();
+
+        if (renderer instanceof ExtendedBlockRenderer) {
+            ((ExtendedBlockRenderer) renderer).renderModel(block, parent_variant, childModel.getModel(), childModel.getExtendedModel(), tileModel, blockColor);
+        } else {
+            ResourcePath<Model> childModelPath = new ResourcePath<>("bluemapmodelloaders:composite/child/dummy");
+            childModelPath.setResource(childModel.getModel());
+            Variant child_variant = new Variant(childModelPath, parent_variant.getX(), parent_variant.getY(), parent_variant.isUvlock(), parent_variant.getWeight());
+
+            renderer.render(block, child_variant, tileModel, blockColor);
+        }
     }
 }
