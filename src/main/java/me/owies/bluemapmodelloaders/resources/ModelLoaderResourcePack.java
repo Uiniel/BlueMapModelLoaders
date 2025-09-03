@@ -3,11 +3,9 @@ package me.owies.bluemapmodelloaders.resources;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
-import de.bluecolored.bluemap.core.resources.pack.Pack;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePackExtension;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.VariantSet;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Key;
 import lombok.Getter;
@@ -21,7 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 public class ModelLoaderResourcePack implements ResourcePackExtension {
     private ResourcePack blueMapResourcePack;
@@ -126,6 +124,14 @@ public class ModelLoaderResourcePack implements ResourcePackExtension {
                 .flatMap(ExtendedModel::getUsedTextures)
                 .forEach(keys::add);
 
+        keys.addAll(mtlLibraries
+                .values()
+                .stream()
+                .flatMap(mtl -> mtl.getMaterials().values().stream())
+                .filter(mat -> !mat.getTexture().isReference())
+                .map(mat -> mat.getTexture().getTexturePath())
+                .collect(Collectors.toSet())
+        );
         return keys;
     }
 
@@ -145,7 +151,7 @@ public class ModelLoaderResourcePack implements ResourcePackExtension {
                         LoaderType<?> loader = model.loader;
                         if (loader != null) {
                             variant.setRenderer(loader.getRenderer());
-                            Constants.LOG.logDebug("CustomRenderer found: " + variant.getModel().getFormatted());
+                            Constants.LOG.logDebug("Set Renderer "+ loader.getRenderer().getKey().getFormatted() + " for model: " + variant.getModel().getFormatted());
                         }
                     });
                 });
