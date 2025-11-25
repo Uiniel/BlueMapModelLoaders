@@ -24,10 +24,11 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     implementation("com.technicjelle:BMUtils:4.3.1")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
-    compileOnly("de.bluecolored:bluemap-core:5.10")
-    compileOnly("de.bluecolored:bluemap-common:5.7")
-    compileOnly("de.bluecolored:bluemap-api:2.7.4")
+    compileOnly("de.bluecolored:bluemap-core:5.12")
+    compileOnly("de.bluecolored:bluemap-common:5.12")
+    compileOnly("de.bluecolored:bluemap-api:2.7.6")
 
     compileOnly("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")
@@ -35,6 +36,11 @@ dependencies {
 
 tasks.shadowJar {
     relocate("com.technicjelle.BMUtils", "${project.group}.${project.name}.BMUtils")
+    relocate("com.github.benmanes.caffeine", "${project.group}.${project.name}.caffeine")
+    relocate("org.checkerframework", "${project.group}.${project.name}.checkerframework")
+    relocate("com.google.errorprone", "${project.group}.${project.name}.errorprone")
+    relocate("org.intellij", "${project.group}.${project.name}.intellij")
+    relocate("org.jetbrains", "${project.group}.${project.name}.jetbrains")
     archiveFileName = "${project.name}-${project.version}.jar"
 }
 
