@@ -83,6 +83,9 @@ public class ExtendedModel {
             }
             if (loaderElement != null) {
                 extendedModel.loader = ResourcesGson.INSTANCE.fromJson(loaderElement, LoaderType.class);
+                if (extendedModel.loader == LoaderType.MISSING_MODEL_LOADER) {
+                    extendedModel.loader = null; // Make sure not to overwrite renderers that might be set by other addons later on
+                }
             }
 
             JsonElement parentElement = model.get("parent");
