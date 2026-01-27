@@ -80,7 +80,7 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
         } else {
             ResourcePath<Model> childModelPath = new ResourcePath<>("bluemapmodelloaders:composite/child/dummy");
             childModelPath.setResource(childModel.getModel());
-            Variant child_variant = new Variant(childModelPath, parent_variant.getX(), parent_variant.getY(), parent_variant.isUvlock(), parent_variant.getWeight());
+            Variant child_variant = new Variant(childModelPath, parent_variant.getX(), parent_variant.getY(), parent_variant.getZ(), parent_variant.isUvlock(), parent_variant.getWeight());
 
             renderer.render(block, child_variant, tileModel, blockColor);
         }
