@@ -3,8 +3,15 @@ A Minecraft mod that allows [BlueMap](https://github.com/BlueMap-Minecraft/BlueM
 
 ## Installation
 
-### BlueMap >=5.10
-Download the [current version](https://github.com/Uiniel/BlueMapModelLoaders/releases/latest) and place the jar file into the packs folder in the BlueMap config directory.
+### BlueMap >= 5.10
+Download the correct addon version for your BlueMap version and place the jar file into the packs folder in the BlueMap config directory.
+
+**Supported Versions:**
+
+| BlueMap version | BlueMapModelLoaders version                                                       |
+|-----------------|-----------------------------------------------------------------------------------|
+| \>= 5.14        | [current version](https://github.com/Uiniel/BlueMapModelLoaders/releases/latest)  |
+| 5.10 - 5.13     | [0.3.3](https://github.com/Uiniel/BlueMapModelLoaders/releases/tag/v0.3.3)        |
 
 ### BlueMap 5.7 - 5.9
 Install [version 0.2.2](https://github.com/Uiniel/BlueMapModelLoaders/releases/tag/v0.2.2) as a Forge/Fabric/NeoForge mod.
