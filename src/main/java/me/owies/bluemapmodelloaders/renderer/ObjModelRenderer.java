@@ -14,6 +14,7 @@ import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.Key;
@@ -192,7 +193,12 @@ public class ObjModelRenderer implements ExtendedBlockRenderer {
         // the mtl can be reused for different models with different textures and calling material.getTexture().getTexturePath(...) would cache the texture
         ResourcePath<Texture> texturePath;
         if (material.getTexture().isReference()) {
-            texturePath = modelResource.getTextures().get(material.getTexture().getReferenceName()).getTexturePath(modelResource.getTextures()::get);
+            TextureVariable textureVariable = modelResource.getTextures().get(material.getTexture().getReferenceName());
+            if (textureVariable == null) {
+                texturePath = ResourcePack.MISSING_TEXTURE;
+            } else {
+                texturePath = textureVariable.getTexturePath(modelResource.getTextures()::get);
+            }
         } else {
             texturePath = material.getTexture().getTexturePath();
         }
