@@ -14,6 +14,7 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
+import me.owies.bluemapmodelloaders.Constants;
 import me.owies.bluemapmodelloaders.resources.ExtendedModel;
 import me.owies.bluemapmodelloaders.resources.LoaderType;
 import me.owies.bluemapmodelloaders.resources.ModelLoaderResourcePack;
@@ -24,7 +25,7 @@ import me.owies.bluemapmodelloaders.resources.composite.CompositeModelExtension;
 
 public class CompositeModelRenderer implements ExtendedBlockRenderer {
     public static final BlockRendererType TYPE = new BlockRendererType.Impl(new Key("bluemapmodelloaders",  "composite"), CompositeModelRenderer::new);
-    private static LoadingCache<BlockRendererType, BlockRenderer> blockRenderers = null;
+    private final LoadingCache<BlockRendererType, BlockRenderer> blockRenderers;
     private final ModelLoaderResourcePack modelLoaderResourcePack;
     private final ResourcePack resourcePack;
 
@@ -32,10 +33,8 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
 
     public CompositeModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
-        if (blockRenderers == null) { // prevent infinite recursion
-            blockRenderers = Caffeine.newBuilder()
-                            .build(type -> type.create(resourcePack, textureGallery, renderSettings));
-        }
+        blockRenderers = Caffeine.newBuilder()
+                        .build(type -> type.create(resourcePack, textureGallery, renderSettings));
         modelLoaderResourcePack = resourcePack.getExtension(ModelLoaderResourcePackFactory.INSTANCE);
     }
 
@@ -51,7 +50,6 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
 
     @Override
     public void renderModel(BlockNeighborhood block, Variant variant, Model model, ExtendedModel extendedModel, TileModelView tileModel, Color blockColor) {
-
         CompositeModelExtension compositeModelResource = extendedModel.getExtension(LoaderType.COMPOSITE);
 
         if (compositeModelResource == null) return;
