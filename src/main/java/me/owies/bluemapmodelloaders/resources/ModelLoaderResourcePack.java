@@ -149,6 +149,11 @@ public class ModelLoaderResourcePack implements ResourcePackExtension {
                         if (model == null) return;
 
                         LoaderType<?> loader = model.loader;
+
+                        if (model.getExtension(LoaderType.ROOT_TRANSFORM_DUMMY).getTransform() != null) {
+                            loader = LoaderType.ROOT_TRANSFORM_DUMMY;
+                        }
+
                         if (loader != null) {
                             variant.setRenderer(loader.getRenderer());
                             Constants.LOG.logDebug("Set Renderer "+ loader.getRenderer().getKey().getFormatted() + " for model: " + variant.getModel().getFormatted());

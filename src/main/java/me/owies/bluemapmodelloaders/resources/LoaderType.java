@@ -12,9 +12,11 @@ import lombok.ToString;
 import me.owies.bluemapmodelloaders.renderer.CompositeModelRenderer;
 import me.owies.bluemapmodelloaders.renderer.EmptyModelRenderer;
 import me.owies.bluemapmodelloaders.renderer.ObjModelRenderer;
+import me.owies.bluemapmodelloaders.renderer.RootTransformDummyModelRenderer;
 import me.owies.bluemapmodelloaders.resources.composite.CompositeModelExtension;
 import me.owies.bluemapmodelloaders.resources.empty.EmptyModelExtension;
 import me.owies.bluemapmodelloaders.resources.obj.ObjModelExtension;
+import me.owies.bluemapmodelloaders.resources.roottransformdummy.RootTransformDummyModelExtension;
 
 import java.lang.reflect.Type;
 import java.util.Arrays;
@@ -43,6 +45,13 @@ public interface LoaderType<M extends ModelExtension> extends Keyed {
             CompositeModelExtension.class
     );
 
+    LoaderType<RootTransformDummyModelExtension> ROOT_TRANSFORM_DUMMY = new Imp<>(
+            new Key("bluemapmodelloaders",  "root_transform_dummy"),
+            RootTransformDummyModelRenderer.TYPE,
+            new String[]{},
+            RootTransformDummyModelExtension.class
+    );
+
     LoaderType<EmptyModelExtension> MISSING_MODEL_LOADER = new Imp<>(new Key("bluemapmodelloaders", "missing_model_loader"),
             BlockRendererType.MISSING,
             new String[]{},
@@ -53,6 +62,7 @@ public interface LoaderType<M extends ModelExtension> extends Keyed {
             OBJ,
             EMPTY,
             COMPOSITE,
+            ROOT_TRANSFORM_DUMMY,
             MISSING_MODEL_LOADER
     );
 
