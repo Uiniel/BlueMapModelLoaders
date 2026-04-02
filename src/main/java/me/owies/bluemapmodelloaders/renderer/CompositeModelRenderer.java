@@ -64,9 +64,16 @@ public class CompositeModelRenderer implements ExtendedBlockRenderer {
     }
 
     public void renderCompositeChildModel(BlockNeighborhood block, Variant parent_variant, Model model, ExtendedModel extendedModel, TileModelView tileModel, Color blockColor, CompositeChildModel childModel) {
+        renderCompositeChildModel(block, parent_variant, model, extendedModel, tileModel, blockColor, childModel, false);
+    }
+
+    public void renderCompositeChildModel(BlockNeighborhood block, Variant parent_variant, Model model, ExtendedModel extendedModel, TileModelView tileModel, Color blockColor, CompositeChildModel childModel, boolean skip_root_transform) {
         BlockRendererType rendererType = BlockRendererType.DEFAULT;
         LoaderType<?> loaderType = childModel.getExtendedModel().getLoader();
-        if (childModel.getExtendedModel().getLoader() != null) {
+        if (!skip_root_transform && childModel.getExtendedModel().getExtension(LoaderType.ROOT_TRANSFORM_DUMMY).getTransform() != null) {
+            loaderType = LoaderType.ROOT_TRANSFORM_DUMMY;
+        }
+        if (loaderType != null) {
             rendererType = loaderType.getRenderer();
         }
 

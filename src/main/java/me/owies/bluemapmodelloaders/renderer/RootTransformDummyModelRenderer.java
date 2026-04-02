@@ -55,7 +55,8 @@ public class RootTransformDummyModelRenderer extends CompositeModelRenderer {
                 modelLoaderResource,
                 blockModel,
                 color,
-                new CompositeChildModel(modelResource, modelLoaderResource)
+                new CompositeChildModel(modelResource, modelLoaderResource),
+                true
         );
         blockModel.initialize(modelStart);
 
