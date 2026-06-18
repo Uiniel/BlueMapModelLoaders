@@ -1,6 +1,7 @@
 package me.owies.bluemapmodelloaders.resources;
 
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
@@ -12,6 +13,7 @@ import lombok.Getter;
 import me.owies.bluemapmodelloaders.Constants;
 import me.owies.bluemapmodelloaders.resources.obj.ObjMaterialLibrary;
 import me.owies.bluemapmodelloaders.resources.obj.ObjModel;
+import me.owies.bluemapmodelloaders.resources.roottransformdummy.RootTransformDummyModelExtension;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -150,7 +152,14 @@ public class ModelLoaderResourcePack implements ResourcePackExtension {
 
                         LoaderType<?> loader = model.loader;
 
-                        if (model.getExtension(LoaderType.ROOT_TRANSFORM_DUMMY).getTransform() != null) {
+                        RootTransformDummyModelExtension rootTransformExtension = model.getExtension(LoaderType.ROOT_TRANSFORM_DUMMY);
+                        if (rootTransformExtension.getTransform() != null) {
+                            BlockRendererType originalRenderer = variant.getRenderer();
+                            if (originalRenderer == null && loader != null) {
+                                originalRenderer = loader.getRenderer();
+                            }
+                            rootTransformExtension.setOriginalRenderer(originalRenderer);
+
                             loader = LoaderType.ROOT_TRANSFORM_DUMMY;
                         }
 

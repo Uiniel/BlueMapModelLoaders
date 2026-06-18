@@ -8,12 +8,14 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import me.owies.bluemapmodelloaders.Constants;
 import me.owies.bluemapmodelloaders.resources.ExtendedModel;
@@ -32,6 +34,9 @@ import java.util.stream.Stream;
 public class RootTransformDummyModelExtension implements ModelExtension {
     @Nullable
     protected MatrixM4f transform;
+
+    @Nullable @Setter
+    protected BlockRendererType originalRenderer;
 
     @Override
     public void applyParent(ExtendedModel parent) {
