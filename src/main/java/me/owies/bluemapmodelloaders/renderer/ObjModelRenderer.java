@@ -3,13 +3,12 @@ package me.owies.bluemapmodelloaders.renderer;
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
-import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
-import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
+import de.bluecolored.bluemap.core.map.hires.block.color.BlockColorCalculator;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
@@ -40,7 +39,7 @@ public class ObjModelRenderer implements ExtendedBlockRenderer {
     private final ModelLoaderResourcePack modelLoaderResourcePack;
     private final TextureGallery textureGallery;
     private final RenderSettings renderSettings;
-    private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
+    private final BlockColorCalculator blockColorCalculator;
 
     private final VectorM3f[] corners = new VectorM3f[8];
     private final VectorM2f[] rawUvs = new VectorM2f[4];
@@ -60,7 +59,7 @@ public class ObjModelRenderer implements ExtendedBlockRenderer {
         this.resourcePack = resourcePack;
         this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
-        this.blockColorCalculator = resourcePack.getColorCalculatorFactory().createCalculator();
+        this.blockColorCalculator = resourcePack.createBlockColorCalculator();
         modelLoaderResourcePack = resourcePack.getExtension(ModelLoaderResourcePackFactory.INSTANCE);
 
         for (int i = 0; i < corners.length; i++) corners[i] = new VectorM3f(0, 0, 0);
